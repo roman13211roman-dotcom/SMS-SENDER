@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">SMS Sender</string>
+
+    <string name="btn_pick_file">Wczytaj plik z numerami (.txt)</string>
+    <string name="btn_send">Wyślij SMS</string>
+    <string name="hint_message">Treść wiadomości SMS…</string>
+    <string name="label_delay">Odstęp między SMS (ms)</string>
+
+    <string name="numbers_loaded">Wczytano numerów: %1$d</string>
+    <string name="numbers_none">Nie wczytano jeszcze żadnego pliku.</string>
+
+    <string name="status_idle">Gotowy do wysyłki.</string>
+    <string name="status_sending">Wysyłam %1$d / %2$d…</string>
+    <string name="status_done">Zakończono. Wysłano: %1$d, błędy: %2$d.</string>
+    <string name="status_stopped">Zatrzymano przez użytkownika (wysłano %1$d / %2$d).</string>
+
+    <string name="err_no_numbers">Najpierw wczytaj plik z numerami.</string>
+    <string name="err_no_message">Wpisz treść wiadomości.</string>
+    <string name="err_permission_denied">Bez uprawnienia SEND_SMS aplikacja nie może wysyłać wiadomości. Włącz je w Ustawieniach aplikacji.</string>
+    <string name="err_read_file">Nie udało się odczytać pliku: %1$s</string>
+    <string name="err_invalid_numbers">Pominięto %1$d nieprawidłowych numerów (linie, które nie wyglądają jak numer telefonu).</string>
+
+    <string name="btn_stop">Zatrzymaj</string>
+</resources>

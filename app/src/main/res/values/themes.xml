@@ -1,0 +1,7 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.SmsSender" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">#1877F2</item>
+        <item name="colorPrimaryDark">#0F5DBD</item>
+        <item name="colorAccent">#1877F2</item>
+    </style>
+</resources>
