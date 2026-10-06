@@ -2,6 +2,8 @@ name: Build APK
 on:
   push:
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   build:
     runs-on: ubuntu-24.04
@@ -23,3 +25,10 @@ jobs:
         with:
           name: sms-sender-apk
           path: app/build/outputs/apk/debug/app-debug.apk
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp app/build/outputs/apk/debug/app-debug.apk sms-sender.apk
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest sms-sender.apk --title "SMS Sender APK" --notes "Gotowy plik do instalacji na telefonie: sms-sender.apk" --target "$GITHUB_SHA"
