@@ -39,6 +39,12 @@ const JOIN_RE = /(do[łl][ąa]cz do grupy|join group|приєднатися до
 
 const clean = (s) => String(s ?? '').replace(/[͏​-‍⁠﻿]/g, '');
 
+/** Скільки постів показано на вкладці (за маркером «dodał(a) post w:» тощо). */
+export function countItems(text) {
+  const re = new RegExp(ITEMS_RE.source, 'gi');
+  return (clean(text).match(re) ?? []).length;
+}
+
 /**
  * Чиста функція (тестується без браузера): визначає, що показує сторінка вкладки.
  * 'itemsGuess' — вміст схожий на непорожній, але маркерів мови немає (лише евристика).
@@ -68,6 +74,8 @@ export function decide(counts) {
   if (counts.declined === 'items') return { status: 'blacklisted', reason: 'declined' };
   const all = ['posted', 'removed', 'declined', 'pending'].every((k) => counts[k] === 'empty' || counts[k] === 'items');
   if (!all) return { status: 'unknown', reason: 'unreadable' };
+  // Кілька постів на розгляді одночасно — група не пропускає наші пости: чорний список.
+  if (counts.pending === 'items' && (counts.pendingN ?? 0) >= 2) return { status: 'blacklisted', reason: 'pendingMany' };
   if (counts.pending === 'items') return { status: 'pending', reason: 'pendingOnly' };
   return { status: 'blacklisted', reason: 'neverPosted' };
 }
@@ -82,7 +90,7 @@ async function snapshot(page) {
  * Відкриває одну вкладку «Twoje materiały» і чекає, поки стане ясно, що на ній.
  * @returns {Promise<'items'|'empty'|'noAccess'|'unavailable'|'unknown'>}
  */
-export async function readTab(page, base, tab, { timeoutMs = 22000, trace = noopTracer } = {}) {
+export async function readTab(page, base, tab, { timeoutMs = 22000, trace = noopTracer, info = {} } = {}) {
   for (let attempt = 0; attempt < 2; attempt++) {
     const target = `${base}/${TABS[tab]}`;
     if (attempt === 0) {
@@ -97,7 +105,10 @@ export async function readTab(page, base, tab, { timeoutMs = 22000, trace = noop
       const snap = await snapshot(page);
       const state = analyzeTabPage(snap);
       last = state;
-      if (state === 'items' || state === 'empty') return state;
+      if (state === 'items' || state === 'empty') {
+        info.items = state === 'items' ? countItems(snap.text) : 0;
+        return state;
+      }
       if (state === 'itemsGuess') {
         // Евристика не годиться для рішення про чорний список: для вкладок
         // «видалені/відхилені» вважаємо результат нечитабельним.
@@ -164,7 +175,9 @@ export async function verifyOneGroup(page, url, { trace = noopTracer, shouldStop
 
   for (const tab of ['posted', 'removed', 'declined', 'pending']) {
     if (shouldStop()) return { status: 'unknown', reason: 'stopped', counts };
-    const state = await readTab(page, base, tab, { trace, timeoutMs: tabTimeoutMs });
+    const info = {};
+    const state = await readTab(page, base, tab, { trace, timeoutMs: tabTimeoutMs, info });
+    if (tab === 'pending' && state === 'items') counts.pendingN = info.items ?? 0;
     await assertNotBlocked(page);
     if (looksLikeLoginPage(page.url())) return { status: 'unknown', reason: 'session', counts };
     if (state === 'noAccess' || state === 'unavailable') {
