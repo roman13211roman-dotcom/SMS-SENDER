@@ -1,0 +1,31 @@
+{
+  "name": "fb-group-publisher",
+  "version": "1.9.4",
+  "description": "Десктопна програма для автоматичної публікації постів і підписки на Facebook-групи (до 10 акаунтів одночасно)",
+  "main": "electron/main.js",
+  "type": "module",
+  "author": "FB Group Publisher",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "playwright": "^1.47.0"
+  },
+  "devDependencies": {
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.fbgrouppublisher.app",
+    "productName": "FB Group Publisher",
+    "directories": { "output": "dist" },
+    "files": ["electron/**", "renderer/**", "src/**", "package.json"],
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "icon": "renderer/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "FB Group Publisher Setup ${version}.exe"
+    }
+  }
+}

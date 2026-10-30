@@ -1,0 +1,1290 @@
+{
+ "blacklist": [
+  {
+   "url": "https://www.facebook.com/groups/670841870319943",
+   "reason": "removed",
+   "counts": {
+    "posted": null,
+    "removed": "items",
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793380476208,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/459275433423913",
+   "reason": "removed",
+   "counts": {
+    "posted": null,
+    "removed": "items",
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793380476208,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/351312612094809",
+   "reason": "removed",
+   "counts": {
+    "posted": null,
+    "removed": "items",
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793380476208,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/445634529165786",
+   "reason": "removed",
+   "counts": {
+    "posted": null,
+    "removed": "items",
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793380476208,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/489798868477309",
+   "reason": "removed",
+   "counts": {
+    "posted": null,
+    "removed": "items",
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793380476208,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/1571906969954131",
+   "reason": "removed",
+   "counts": {
+    "posted": null,
+    "removed": "items",
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793380476208,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/831399127887880",
+   "reason": "removed",
+   "counts": {
+    "posted": null,
+    "removed": "items",
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793380476208,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/822007916059678",
+   "reason": "removed",
+   "counts": {
+    "posted": null,
+    "removed": "items",
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793380476208,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/258869614794597",
+   "reason": "removed",
+   "counts": {
+    "posted": null,
+    "removed": "items",
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793380476208,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/2417000638452771",
+   "reason": "removed",
+   "counts": {
+    "posted": null,
+    "removed": "items",
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793380476208,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/1220281501810927",
+   "reason": "removed",
+   "counts": {
+    "posted": null,
+    "removed": "items",
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793380476208,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/3567793923502980",
+   "reason": "removed",
+   "counts": {
+    "posted": null,
+    "removed": "items",
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793380476208,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/785804159277349",
+   "reason": "removed",
+   "counts": {
+    "posted": null,
+    "removed": "items",
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793380476208,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/7335954446477173",
+   "reason": "removed",
+   "counts": {
+    "posted": null,
+    "removed": "items",
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793380476208,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/1698549160332225",
+   "reason": "removed",
+   "counts": {
+    "posted": null,
+    "removed": "items",
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793380476208,
+   "account": "chrome-verification"
+  }
+ ],
+ "work": [
+  {
+   "url": "https://www.facebook.com/groups/2954559961410207",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/260760388846501",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/1851617681763868",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/511796808322358",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/298579619800526",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/1364885381118357",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/1741926306775488",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/1741533070051306",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/1102322819920843",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/358375045611587",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/519419577914534",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/6708086869236993",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/315322168039116",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/938059561408917",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/3174289096216397",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/jobgdansk",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/1366169910825227",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/1651006342297685",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/592819447868482",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/878896850274302",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/1150567548711638",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/1097740441395228",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/1417669049144241",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/1771448536624951",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/239374000932478",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/264448957510473",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/2676952395856598",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/3013693802285145",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/313372288164857",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/675564700186541",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/321395636169934",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/3400494546664830",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/373632151301465",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/451411859143755",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/631134518410050",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/666549255443388",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/praca.w.polsce.bydgoszcz.poznan.torun.mlawa",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/warszawanew",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/weworkinpoland",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/wroclaw.work.people",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/524202778946342",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/1490234142305004",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/2128175624311166",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/709667608393517",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/1501814433999706",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/1180401829135852",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/1276685473177260",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/1748030519144798",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/2001348276911234",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/2023955698418737",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/2035344063494215",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/2265593327580453",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/2559183197441398",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/2811461062448886",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/289260950323866",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/348657389353109",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/365725764587197",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/371856241140642",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/414118239165410",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/469522416757025",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/478814916616333",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/483043389272778",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/488230263342452",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/563873009742091",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/583795580208346",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/603094356743668",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/638135260585496",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/777845204943796",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/814253896163414",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/827676049914860",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/860578626024227",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/864739761933304",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/pracaszczeciniokolice",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/217652194397327",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/819588327272519",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/1996587533950882",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/1217308682273738",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/728545061979277",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/934027338575890",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/JobKatowice",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/1151274812477253",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/207046473207345",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/230480851672230",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/650345923897584",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/679512813532678",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/915543629293565",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/2436533126666398",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/650512758056509",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/1356200252549124",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/501358727369525",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/1618135649298918",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  },
+  {
+   "url": "https://www.facebook.com/groups/510667793244487",
+   "reason": "posted",
+   "counts": {
+    "posted": "items",
+    "removed": null,
+    "declined": null,
+    "pending": null
+   },
+   "at": 1793374644808,
+   "account": "chrome-verification"
+  }
+ ]
+}

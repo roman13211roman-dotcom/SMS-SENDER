@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <title>FB Group Publisher</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1 id="appTitle">FB Group Publisher</h1>
+    <div class="header-right">
+      <span id="dailyCounter" class="daily-counter">Опубліковано сьогодні: 0</span>
+      <button id="btnStartAll" class="btn btn-header">Запустити всі</button>
+      <button id="btnStopAll" class="btn btn-header">Зупинити всі</button>
+      <select id="langSelect" class="lang-select">
+        <option value="uk">UA</option>
+        <option value="en">EN</option>
+      </select>
+    </div>
+  </header>
+
+  <nav class="account-bar">
+    <div id="accountTabs" class="account-tabs"></div>
+    <button id="btnAddAccount" class="btn btn-secondary btn-small">+ Додати акаунт</button>
+    <span id="accountLimit" class="account-limit"></span>
+  </nav>
+
+  <main>
+    <section class="panel" id="accountPanel">
+      <div class="account-head">
+        <div class="account-name-wrap">
+          <label id="accountNameLabel" for="accountName">Назва акаунта</label>
+          <input id="accountName" type="text" maxlength="40" />
+        </div>
+        <button id="btnDeleteAccount" class="btn btn-danger btn-small">Видалити акаунт</button>
+      </div>
+
+      <div class="session-row">
+        <span id="sessionBadge" class="badge">Не увійшли</span>
+        <button id="btnLogin" class="btn btn-secondary">Увійти</button>
+        <button id="btnConfirmLogin" class="btn btn-secondary" hidden>Я увійшов</button>
+      </div>
+
+      <div class="mode-row">
+        <button id="modePublish" class="mode-btn mode-btn-active">Публікація</button>
+        <button id="modeActivity" class="mode-btn">Активність</button>
+        <button id="modeWarmup" class="mode-btn">Прогрів</button>
+        <button id="modeVerify" class="mode-btn">Верифікація</button>
+      </div>
+
+      <div id="blockBox" class="block-box" hidden>
+        <span id="blockText"></span>
+        <button id="btnClearBlock" class="btn btn-secondary btn-small">Зняти червону позначку</button>
+      </div>
+
+      <label id="groupsLabel" for="groupsList">Список груп (одне посилання на рядок)</label>
+      <textarea id="groupsList" rows="5" placeholder="https://www.facebook.com/groups/...&#10;https://www.facebook.com/groups/..."></textarea>
+      <div id="workRow" class="schedule-row">
+        <button id="btnUseWork" class="mode-btn">Групи в роботу</button>
+        <small id="workHint"></small>
+      </div>
+
+      <div id="verifyOnly" hidden>
+        <small id="verifyHint"></small>
+        <div class="schedule-row">
+          <button id="btnImportGroups" class="btn btn-secondary btn-small">Імпорт груп із файлу</button>
+          <button id="btnDropBlack" class="btn btn-secondary btn-small">Прибрати чорні групи зі списку акаунта</button>
+        </div>
+      </div>
+
+      <div id="publishOnly">
+      <label id="postTextLabel" for="postText">Текст публікації</label>
+      <textarea id="postText" rows="5" placeholder="Введіть текст, який буде опубліковано у всіх групах..."></textarea>
+      <small id="textVariantsHint">Кілька варіантів розділяйте рядком --- . Підстановки: {привіт|вітаю|добрий день}.</small>
+      <small id="textPreview" class="text-preview"></small>
+
+      <label id="imageLabel">Зображення (необов'язково)</label>
+      <div class="image-row">
+        <button id="btnSelectImage" class="btn btn-secondary">Обрати зображення</button>
+        <button id="btnClearImage" class="btn btn-secondary" hidden>Прибрати</button>
+        <span id="imagePathLabel" class="image-path">Не обрано</span>
+      </div>
+      <div id="joinBox" class="join-box">
+        <label class="check-label" for="autoJoin">
+          <input id="autoJoin" type="checkbox" checked />
+          <span id="autoJoinLabel">Вступати в групу, якщо ще не вступили</span>
+        </label>
+        <div class="schedule-row">
+          <label id="dailyLimitLabel" for="dailyJoinLimit">Ліміт вступів за добу</label>
+          <input id="dailyJoinLimit" class="num-input" type="number" min="0" max="500" value="20" />
+        </div>
+        <label class="check-label" for="autoForm">
+          <input id="autoForm" type="checkbox" checked />
+          <span id="autoFormLabel">Заповнювати анкету вступу автоматично (ставити галочки й надсилати)</span>
+        </label>
+        <label id="formAnswerLabel" for="formAnswer">Відповідь на текстові запитання анкети</label>
+        <input id="formAnswer" type="text" maxlength="300" placeholder="Напр.: Chcę dołączyć, aby szukać pracy" />
+        <small id="formAnswerHint">Вписується в усі порожні текстові запитання. Якщо порожньо, а анкета вимагає відповіді — групу буде пропущено. Питання з вибором варіантів пропускаються.</small>
+        <small id="dailyLimitHint">0 — без ліміту. Рекомендовано 10–20 вступів на добу.</small>
+      </div>
+      </div>
+
+      <div class="schedule-box">
+        <div class="schedule-row">
+          <label id="startTimeLabel" for="startTime">Час початку</label>
+          <input id="startTime" type="time" />
+          <button id="btnClearTime" class="btn btn-secondary btn-small">Одразу</button>
+        </div>
+        <small id="startTimeHint">Порожньо — стартує одразу після натискання. Якщо час уже минув — теж одразу.</small>
+
+        <div class="schedule-row" id="delayRow">
+          <label id="delayLabel">Затримка між постами</label>
+          <span id="delayFromLabel">від</span>
+          <input id="delayMin" class="num-input" type="number" min="0" max="3600" value="3" />
+          <span id="delayToLabel">до</span>
+          <input id="delayMax" class="num-input" type="number" min="0" max="3600" value="5" />
+          <span id="delayUnit">сек</span>
+        </div>
+
+
+        <div id="warmupOnly">
+          <small id="warmupInfo"></small>
+          <label id="warmCommentTextsLabel" for="warmCommentTexts">Варіанти коментарів (один на рядок; порожньо — стандартні короткі: 👍, Дякую…)</label>
+          <textarea id="warmCommentTexts" rows="3" placeholder="Дякую за інформацію!&#10;Цікаво, дякую"></textarea>
+          <div class="schedule-row">
+            <button id="btnResetWarmup" class="btn btn-secondary btn-small">Почати прогрів заново</button>
+            <span id="warmupStartLabel"></span>
+          </div>
+          <small id="warmupHint">Для нових акаунтів. Працює автономно 14 днів: щодня виконує свою норму активності, а коли вона виконана — чекає до ранку. Для акаунтів, які давно в роботі, використовуйте «Активність».</small>
+        </div>
+
+        <div id="activityOnly">
+          <div class="schedule-row">
+            <label id="actDurLabel">Тривалість сесії</label>
+            <span class="act-from">від</span>
+            <input id="actDurMin" class="num-input" type="number" min="1" max="240" value="10" />
+            <span class="act-to">до</span>
+            <input id="actDurMax" class="num-input" type="number" min="1" max="240" value="20" />
+            <span class="act-min">хв</span>
+          </div>
+          <div class="schedule-row">
+            <label id="actPauseLabel">Пауза між сесіями</label>
+            <span class="act-from">від</span>
+            <input id="actPauseMin" class="num-input" type="number" min="0" max="1440" value="30" />
+            <span class="act-to">до</span>
+            <input id="actPauseMax" class="num-input" type="number" min="0" max="1440" value="90" />
+            <span class="act-min">хв</span>
+          </div>
+          <div class="schedule-row">
+            <label id="actLikesLabel">Лайків за сесію</label>
+            <span class="act-from">від</span>
+            <input id="actLikesMin" class="num-input" type="number" min="0" max="100" value="2" />
+            <span class="act-to">до</span>
+            <input id="actLikesMax" class="num-input" type="number" min="0" max="100" value="6" />
+          </div>
+          <div class="schedule-row">
+            <label id="actFollowsLabel">Підписок на людей за сесію</label>
+            <span class="act-from">від</span>
+            <input id="actFollowsMin" class="num-input" type="number" min="0" max="50" value="1" />
+            <span class="act-to">до</span>
+            <input id="actFollowsMax" class="num-input" type="number" min="0" max="50" value="3" />
+          </div>
+          <div class="schedule-row">
+            <label id="actCommentsLabel">Коментарів за сесію</label>
+            <span class="act-from">від</span>
+            <input id="actCommentsMin" class="num-input" type="number" min="0" max="20" value="0" />
+            <span class="act-to">до</span>
+            <input id="actCommentsMax" class="num-input" type="number" min="0" max="20" value="1" />
+          </div>
+          <label id="actCommentTextsLabel" for="actCommentTexts">Варіанти коментарів (один на рядок; порожньо — стандартні короткі)</label>
+          <textarea id="actCommentTexts" rows="4" placeholder="Дякую за інформацію!&#10;Цікаво, дякую&#10;Корисний пост 👍"></textarea>
+          <div class="schedule-row">
+            <label id="actDailyLimitLabel" for="actDailyLimit">Ліміт дій за добу</label>
+            <input id="actDailyLimit" class="num-input" type="number" min="0" max="2000" value="0" />
+          </div>
+          <label class="check-label" for="actVisitGroups">
+            <input id="actVisitGroups" type="checkbox" checked />
+            <span id="actVisitGroupsLabel">Заходити в групи зі списку (список необов'язковий)</span>
+          </label>
+          <label class="check-label" for="actOpenPosts">
+            <input id="actOpenPosts" type="checkbox" checked />
+            <span id="actOpenPostsLabel">Відкривати пости й читати коментарі</span>
+          </label>
+          <small id="actHint">Повністю автономний режим: сесії йдуть одна за одною, доки не натиснете «Зупинити». Лайки, підписки на людей і рідкісні коментарі з вашого списку розкидані випадково по сесії.</small>
+        </div>
+
+      </div>
+
+      <div class="button-row">
+        <button id="btnStart" class="btn btn-primary">Почати публікацію</button>
+        <button id="btnPause" class="btn btn-secondary" disabled>Пауза</button>
+        <button id="btnStop" class="btn btn-danger" disabled>Зупинити</button>
+      </div>
+
+      <div id="statusLine" class="status-line"></div>
+
+      <div class="progress-wrap">
+        <div class="progress-bar">
+          <div id="progressFill" class="progress-fill"></div>
+        </div>
+        <span id="progressLabel">0 / 0</span>
+      </div>
+    </section>
+
+    <section class="panel results-panel">
+      <div id="verifyResults" hidden>
+        <div class="results-head">
+          <h2 id="verifyTitle">Верифікація груп</h2>
+        </div>
+        <div class="tiles">
+          <div class="tile tile-ok"><b id="vGood">0</b><span id="vGoodLabel">Хороші</span></div>
+          <div class="tile tile-fail"><b id="vBlack">0</b><span id="vBlackLabel">Чорний список</span></div>
+          <div class="tile tile-wait"><b id="vPending">0</b><span id="vPendingLabel">На розгляді</span></div>
+          <div class="tile"><b id="vOther">0</b><span id="vOtherLabel">Без рішення</span></div>
+        </div>
+        <div class="table-wrap">
+          <table class="results-table">
+            <thead><tr><th id="vThGroup">Група</th><th id="vThStatus">Статус</th></tr></thead>
+            <tbody id="verifyBody"></tbody>
+          </table>
+          <div id="verifyEmpty" class="results-empty"></div>
+        </div>
+        <details class="log-details" open>
+          <summary id="blackSummary">Постійний чорний список</summary>
+          <div class="log-head">
+            <small id="blackNote"></small>
+            <button id="btnRevealBlack" class="btn btn-secondary btn-small">Показати файл</button>
+          </div>
+          <div id="blackList" class="log"></div>
+        </details>
+      </div>
+
+      <div class="results-head" id="publishResultsHead">
+        <h2 id="resultsTitle">Результати</h2>
+        <button id="btnRevealShots" class="btn btn-secondary btn-small">Скріншоти</button>
+        <button id="btnClearResults" class="btn btn-secondary btn-small">Очистити</button>
+      </div>
+
+      <div class="tiles" id="publishTiles">
+        <div class="tile tile-ok"><b id="tilePublished">0</b><span id="tilePublishedLabel">Опубліковано</span></div>
+        <div class="tile tile-wait"><b id="tilePending">0</b><span id="tilePendingLabel">Пост на розгляді</span></div>
+        <div class="tile tile-wait"><b id="tileJoinPending">0</b><span id="tileJoinPendingLabel">Вступ на розгляді</span></div>
+        <div class="tile tile-fail"><b id="tileFailed">0</b><span id="tileFailedLabel">Не вдалося</span></div>
+      </div>
+
+      <div id="waitNote" class="wait-note" hidden></div>
+      <div id="reasonList" class="reason-list"></div>
+
+      <div class="table-wrap" id="publishTable">
+        <table id="resultsTable" class="results-table">
+          <thead><tr><th id="thGroup">Група</th><th id="thStatus">Статус</th></tr></thead>
+          <tbody id="resultsBody"></tbody>
+        </table>
+        <div id="resultsEmpty" class="results-empty">Результатів ще немає.</div>
+      </div>
+
+      <details class="log-details">
+        <summary id="logLabel">Технічний журнал</summary>
+        <div class="log-head">
+          <span></span>
+          <select id="logScope" class="log-scope">
+            <option value="current">Цей акаунт</option>
+            <option value="all">Усі акаунти</option>
+          </select>
+        </div>
+        <div id="log" class="log"></div>
+      </details>
+    </section>
+  </main>
+
+  <script src="i18n.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
