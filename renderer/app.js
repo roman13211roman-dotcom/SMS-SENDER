@@ -46,8 +46,6 @@ const logEl = el('log');
 const dailyCounterEl = el('dailyCounter');
 const modePublishEl = el('modePublish');
 const modeActivityEl = el('modeActivity');
-const modeWarmupEl = el('modeWarmup');
-const modeVerifyEl = el('modeVerify');
 const modeJoinEl = el('modeJoin');
 const modeFullEl = el('modeFull');
 const btnUseWorkEl = el('btnUseWork');
@@ -275,8 +273,6 @@ function applyTranslations() {
   el('groupsLabel').textContent =
     accountMode === 'activity' || accountMode === 'warmup' ? ui.groupsLabelActivity : ui.groupsLabel;
   modeActivityEl.textContent = ui.modeActivity;
-  modeWarmupEl.textContent = ui.modeWarmup;
-  modeVerifyEl.textContent = ui.modeVerify;
   modeJoinEl.textContent = ui.modeJoin;
   modeFullEl.textContent = ui.modeFull;
   el('verifyHint').textContent = accountMode === 'join' ? ui.joinHint : accountMode === 'full' ? ui.fullHint : ui.verifyHint;
@@ -643,8 +639,6 @@ function updateControls() {
     [modePublishEl, 'publish'],
     [modeFullEl, 'full'],
     [modeActivityEl, 'activity'],
-    [modeWarmupEl, 'warmup'],
-    [modeVerifyEl, 'verify'],
   ]) {
     button.disabled = busy;
     button.classList.toggle('mode-btn-active', accountMode === value);
@@ -863,8 +857,6 @@ function setAccountMode(mode) {
 
 modePublishEl.addEventListener('click', () => setAccountMode('publish'));
 modeActivityEl.addEventListener('click', () => setAccountMode('activity'));
-modeWarmupEl.addEventListener('click', () => setAccountMode('warmup'));
-modeVerifyEl.addEventListener('click', () => setAccountMode('verify'));
 modeJoinEl.addEventListener('click', () => setAccountMode('join'));
 modeFullEl.addEventListener('click', () => setAccountMode('full'));
 
@@ -1225,7 +1217,7 @@ async function init() {
     autoForm: true,
     formAnswer: '',
     ...account,
-  })).map((account) => ({ ...account, mode: account.mode === 'subscribe' ? 'publish' : account.mode, activity: { ...DEFAULT_ACTIVITY, ...(account.activity ?? {}) }, warmup: { startDate: '', commentTexts: '', ...(account.warmup ?? {}) }, blocked: account.blocked ?? null }));
+  })).map((account) => ({ ...account, mode: ['subscribe', 'verify', 'warmup'].includes(account.mode) ? 'publish' : account.mode, activity: { ...DEFAULT_ACTIVITY, ...(account.activity ?? {}) }, warmup: { startDate: '', commentTexts: '', ...(account.warmup ?? {}) }, blocked: account.blocked ?? null }));
   if (accounts.length === 0) accounts.push(newAccountObject());
   activeId = accounts.some((a) => a.id === config.activeAccountId) ? config.activeAccountId : accounts[0].id;
 
