@@ -564,6 +564,7 @@ export async function publishToGroups({
   onBlacklist = async () => {},
   getPendingSince = () => null,
   setPendingSince = () => {},
+  getPostedToday = async () => null,
   getJoinCount = () => 0,
   onJoin = () => {},
   onResult = () => {},
@@ -645,6 +646,17 @@ export async function publishToGroups({
         counts.failed++;
         trace.event('group.blacklisted', { n: current, url });
         await onResult(url, { status: 'failed', reason: 'blacklisted' });
+        onProgress(current, groups.length);
+        continue;
+      }
+      // Сьогодні в цій групі цей акаунт уже публікував (пост опубліковано або чекає
+      // схвалення) — другий пост того ж дня не надсилаємо, навіть сторінку не відкриваємо.
+      const prior = await Promise.resolve(getPostedToday(url)).catch(() => null);
+      if (prior === 'published' || prior === 'pending') {
+        onLog(t(lang, `publish.result.${prior}.alreadyToday`, { current }));
+        counts[prior] = (counts[prior] ?? 0) + 1;
+        trace.event('group.skippedToday', { n: current, url, prior });
+        await onResult(url, { status: prior, reason: 'alreadyToday' });
         onProgress(current, groups.length);
         continue;
       }

@@ -170,6 +170,24 @@ async function loadResults(id) {
   return groups;
 }
 
+/** Чи публікував цей акаунт у групі СЬОГОДНІ (опубліковано / пост на розгляді) → 'published' | 'pending' | null. */
+async function postedToday(id, url) {
+  let groups = {};
+  try {
+    groups = JSON.parse(await readFile(resultsPathFor(id), 'utf-8')).groups ?? {};
+  } catch {
+    return null;
+  }
+  const key = groupKey(url);
+  if (!key) return null;
+  const today = new Date().toDateString();
+  for (const [u, v] of Object.entries(groups)) {
+    if (groupKey(u) !== key) continue;
+    if ((v.status === 'published' || v.status === 'pending') && v.at && new Date(v.at).toDateString() === today) return v.status;
+  }
+  return null;
+}
+
 async function saveResult(id, url, outcome) {
   const groups = await loadResults(id);
   const entry = { status: outcome.status, reason: outcome.reason ?? '', at: Date.now() };
@@ -732,6 +750,7 @@ ipcMain.handle('publish:start', async (_event, payload) => {
             await writeFile(pendingSincePathFor(id), JSON.stringify(map));
           },
           getJoinCount: () => loadDailyCount(joinStatsPathFor(id)),
+          getPostedToday: (url) => postedToday(id, url),
           onJoin: async () => {
             await incrementDailyCount(joinStatsPathFor(id));
             await sendStats();
