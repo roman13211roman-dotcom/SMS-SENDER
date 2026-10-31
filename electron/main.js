@@ -667,6 +667,15 @@ ipcMain.handle('publish:start', async (_event, payload) => {
           shouldStop: common.shouldStop,
           shouldPause: common.shouldPause,
           onResult: (url, entry) => saveVerify(id, url, entry),
+          autoJoin: payload.autoJoin !== false,
+          autoForm: payload.autoForm !== false,
+          formAnswer: String(payload.formAnswer ?? '').slice(0, 300),
+          dailyJoinLimit: Math.max(0, Math.floor(Number(payload.dailyJoinLimit) || 0)),
+          getJoinCount: () => loadDailyCount(joinStatsPathFor(id)),
+          onJoin: async () => {
+            await incrementDailyCount(joinStatsPathFor(id));
+            await sendStats();
+          },
         })
       : mode === 'warmup'
       ? runWarmup({

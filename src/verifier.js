@@ -17,7 +17,7 @@ import { t } from './i18n.js';
 import { sleep, waitWithStop, waitWhilePaused } from './timing.js';
 import { launchChrome } from './chromeLauncher.js';
 import { assertNotBlocked, BlockedError, detectBlock } from './blockDetect.js';
-import { looksLikeLoginPage, detectGroupState, isLoggedOutPage } from './groupJoin.js';
+import { looksLikeLoginPage, detectGroupState, isLoggedOutPage, joinGroupFlow } from './groupJoin.js';
 import { groupBaseUrl, groupKey } from './blacklist.js';
 import { noopTracer } from './trace.js';
 import { access } from 'node:fs/promises';
@@ -160,7 +160,7 @@ export async function readMembership(page, base, { timeoutMs = 25000, trace = no
  * Перевіряє одну групу. Повертає { status, reason, counts }.
  * Кидає BlockedError, якщо Facebook показав блокування.
  */
-export async function verifyOneGroup(page, url, { trace = noopTracer, shouldStop = () => false, tabTimeoutMs = 22000 } = {}) {
+export async function verifyOneGroup(page, url, { trace = noopTracer, shouldStop = () => false, tabTimeoutMs = 22000, join = null } = {}) {
   const base = groupBaseUrl(url);
   const counts = { posted: null, removed: null, declined: null, pending: null };
   if (!base) return { status: 'unknown', reason: 'badUrl', counts };
@@ -169,7 +169,20 @@ export async function verifyOneGroup(page, url, { trace = noopTracer, shouldStop
   const membership = await readMembership(page, base, { trace });
   await assertNotBlocked(page);
   if (looksLikeLoginPage(page.url()) || (await isLoggedOutPage(page))) return { status: 'unknown', reason: 'session', counts };
-  if (membership === 'canJoin') return { status: 'noAccess', reason: 'notMember', counts };
+  if (membership === 'canJoin') {
+    // Не учасник: за потреби вступаємо. Щойно вступивши, історії постів ще немає,
+    // тому в чорний список НЕ додаємо — група лишається «не перевіреною».
+    if (!join) return { status: 'noAccess', reason: 'notMember', counts };
+    if (join.limit > 0 && (await join.getCount()) >= join.limit) return { status: 'noAccess', reason: 'joinLimit', counts };
+    const res = await joinGroupFlow(page, { autoForm: join.autoForm, formAnswer: join.formAnswer, onLog: join.onLog, lang: join.lang, current: join.current });
+    await assertNotBlocked(page);
+    if (res.result === 'failed') {
+      if (res.reason === 'session') return { status: 'unknown', reason: 'session', counts };
+      return { status: 'noAccess', reason: res.reason, counts, joinAttempted: true };
+    }
+    await join.onJoin(res.result === 'pending' ? 'requested' : 'joined');
+    return { status: 'noAccess', reason: res.result === 'pending' ? 'joinSent' : 'justJoined', counts, joined: true };
+  }
   if (membership === 'pending') return { status: 'noAccess', reason: 'joinPending', counts };
   if (membership !== 'member') return { status: 'unknown', reason: 'membershipUnclear', counts };
 
@@ -218,6 +231,12 @@ export async function verifyGroups({
   createBrowser = launchChrome,
   tabTimeoutMs = 22000,
   pauseScale = 1,
+  autoJoin = true,
+  autoForm = true,
+  formAnswer = '',
+  dailyJoinLimit = 0,
+  getJoinCount = () => 0,
+  onJoin = async () => {},
 }) {
   try {
     await access(cookiesPath);
@@ -296,7 +315,14 @@ export async function verifyGroups({
       let verdict;
       try {
         await onResult(url, { status: 'working' });
-        verdict = await verifyOneGroup(page, url, { trace, shouldStop, tabTimeoutMs });
+        verdict = await verifyOneGroup(page, url, {
+          trace,
+          shouldStop,
+          tabTimeoutMs,
+          join: autoJoin
+            ? { autoForm, formAnswer, onLog, lang, current, limit: dailyJoinLimit, getCount: getJoinCount, onJoin }
+            : null,
+        });
       } catch (err) {
         const reason = err instanceof BlockedError ? err.reason : await detectBlock(page);
         trace.event('verify.error', { n: current, message: String(err?.message ?? err) });
@@ -339,6 +365,7 @@ export async function verifyGroups({
       sinceBreak++;
       if (i < list.length - 1 && !shouldStop()) {
         let wait = (1500 + Math.random() * 2500) * pauseScale;
+        if (verdict.joined || verdict.joinAttempted) wait += (6000 + Math.random() * 6000) * pauseScale;
         if (sinceBreak >= 30) {
           sinceBreak = 0;
           wait = 20000 + Math.random() * 20000;
