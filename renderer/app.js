@@ -141,7 +141,7 @@ function groupKeyOf(url) {
 }
 /** Групи, з якими працює режим «Публікація»: або «Групи в роботу», або вставлений список. */
 function effectiveGroups(account) {
-  if (account && ['publish', 'full'].includes(account.mode ?? 'publish') && account.useWorklist) {
+  if (account && (account.mode ?? 'publish') === 'publish' && account.useWorklist) {
     return workItems.map((g) => g.url).filter((u) => !isBlacklistedUrl(u));
   }
   return account?.groups ?? [];
@@ -651,12 +651,12 @@ function updateControls() {
   warmupOnlyEl.hidden = accountMode !== 'warmup';
   verifyOnlyEl.hidden = !(verifyLike || accountMode === 'full');
   el('verifyHint').textContent = accountMode === 'join' ? ui.joinHint : accountMode === 'full' ? ui.fullHint : ui.verifyHint;
-  workRowEl.hidden = !publishLike;
+  workRowEl.hidden = accountMode !== 'publish';
   btnUseWorkEl.textContent = ui.btnUseWork(workItems.length);
   btnUseWorkEl.classList.toggle('mode-btn-active', Boolean(account.useWorklist));
   btnUseWorkEl.disabled = busy;
   el('workHint').textContent = account.useWorklist ? ui.workActive(effectiveGroups(account).length) : ui.workHint;
-  groupsListEl.disabled = publishLike && Boolean(account.useWorklist);
+  groupsListEl.disabled = accountMode === 'publish' && Boolean(account.useWorklist);
   verifyResultsEl.hidden = !(verifyLike || accountMode === 'full');
   delayRowEl.hidden = accountMode === 'activity' || accountMode === 'warmup' || verifyLike;
   btnImportGroupsEl.disabled = busy;
@@ -998,7 +998,7 @@ async function startAccount(id) {
   const verifyMode = accountMode === 'verify' || accountMode === 'join';
   const text = (account.text ?? '').trim();
   const groups = effectiveGroups(account);
-  const useWorklist = Boolean(account.useWorklist) && (accountMode === 'publish' || accountMode === 'full');
+  const useWorklist = Boolean(account.useWorklist) && accountMode === 'publish';
   const imagePath = account.imagePath || null;
   const delayMinSec = Number(account.delayMinSec);
   const delayMaxSec = Number(account.delayMaxSec);

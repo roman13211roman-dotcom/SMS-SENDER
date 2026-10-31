@@ -617,7 +617,7 @@ ipcMain.handle('publish:start', async (_event, payload) => {
   const { id, text, imagePath, startTime, delayMinSec, delayMaxSec } = payload;
   // «Групи в роботу»: список береться з бази програми, вставляти нічого не треба.
   assertValidId(id);
-  const useWork = payload.useWorklist === true && ['publish', 'full'].includes(payload.mode ?? 'publish');
+  const useWork = payload.useWorklist === true && (payload.mode ?? 'publish') === 'publish';
   const groups = useWork ? (await workGroups(id)).map((g) => g.url) : payload.groups;
   const mode = ['activity', 'warmup', 'verify', 'join', 'full'].includes(payload.mode) ? payload.mode : 'publish';
   const bl = await blacklistFor(id);
