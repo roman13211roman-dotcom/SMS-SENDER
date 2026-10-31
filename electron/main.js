@@ -57,9 +57,39 @@ const worklist = createWorklist([
   path.join(app.getPath('userData'), 'worklist.mirror.json'),
 ]);
 
-/** Групи в роботі = хороші групи, яких немає в чорному списку. */
-function workGroups() {
-  return worklist.list().filter((g) => !blacklist.has(g.url));
+// Чорний список тепер ОСОБЛИВИЙ ДЛЯ КОЖНОГО акаунта (профілю Facebook): група, де пости
+// видаляють/відхиляють або висить 2+ пости на розгляді, блокується лише для цього акаунта.
+// Глобальний файл лишається тільки як джерело міграції (читається, більше не змінюється).
+const accountBlacklists = new Map(); // id -> Promise<blacklist>
+
+function blacklistFor(id) {
+  if (!accountBlacklists.has(id)) {
+    const task = (async () => {
+      const dir = path.join(ACCOUNTS_DIR, id);
+      const bl = createBlacklist([
+        path.join(dir, 'blacklist.json'),
+        path.join(dir, 'blacklist.backup.json'),
+        path.join(app.getPath('userData'), `blacklist.${id}.mirror.json`),
+      ]);
+      await bl.load().catch((err) => logToFile(`Blacklist(${id}) load failed: ${err.message}`));
+      // Міграція: записи цього акаунта + початкові (seed / без акаунта).
+      const legacy = blacklist.list().filter((g) => !g.account || g.account === 'seed' || g.account === id);
+      if (legacy.length) {
+        const added = await bl.addMany(legacy.map((g) => ({ url: g.url, reason: g.reason, account: g.account || 'seed', counts: g.counts, at: g.at })));
+        if (added) logToFile(`Blacklist(${id}) migrated +${added}`);
+      }
+      return bl;
+    })();
+    accountBlacklists.set(id, task);
+  }
+  return accountBlacklists.get(id);
+}
+
+/** Групи в роботі = хороші групи, яких немає в чорному списку цього акаунта. */
+async function workGroups(id) {
+  if (!ID_PATTERN.test(String(id ?? ''))) return worklist.list();
+  const bl = await blacklistFor(id);
+  return worklist.list().filter((g) => !bl.has(g.url));
 }
 
 /** Початкові дані (результати верифікації, виконаної раніше): лише додаються, нічого не перезаписують. */
@@ -414,11 +444,12 @@ ipcMain.handle('stats:load', async () => collectStats());
 
 // --- Верифікація груп і чорний список (лише читання: видалення немає) ---
 
-ipcMain.handle('blacklist:list', async () => blacklist.list());
-ipcMain.handle('worklist:list', async () => workGroups());
+ipcMain.handle('blacklist:list', async (_e, id) => (ID_PATTERN.test(String(id ?? '')) ? (await blacklistFor(id)).list() : []));
+ipcMain.handle('worklist:list', async (_e, id) => workGroups(id));
 
-ipcMain.handle('blacklist:reveal', async () => {
-  shell.showItemInFolder(blacklist.files[0]);
+ipcMain.handle('blacklist:reveal', async (_e, id) => {
+  if (!ID_PATTERN.test(String(id ?? ''))) return { ok: false };
+  shell.showItemInFolder((await blacklistFor(id)).files[0]);
   return { ok: true };
 });
 
@@ -585,11 +616,12 @@ ipcMain.handle('text:preview', (_event, text) => previewText(String(text ?? '').
 ipcMain.handle('publish:start', async (_event, payload) => {
   const { id, text, imagePath, startTime, delayMinSec, delayMaxSec } = payload;
   // «Групи в роботу»: список береться з бази програми, вставляти нічого не треба.
-  const useWork = payload.useWorklist === true && (payload.mode ?? 'publish') === 'publish';
-  const groups = useWork ? workGroups().map((g) => g.url) : payload.groups;
-  const mode = ['activity', 'warmup', 'verify'].includes(payload.mode) ? payload.mode : 'publish';
   assertValidId(id);
-  if (mode === 'verify') await loadVerify(id);
+  const useWork = payload.useWorklist === true && ['publish', 'full'].includes(payload.mode ?? 'publish');
+  const groups = useWork ? (await workGroups(id)).map((g) => g.url) : payload.groups;
+  const mode = ['activity', 'warmup', 'verify', 'join', 'full'].includes(payload.mode) ? payload.mode : 'publish';
+  const bl = await blacklistFor(id);
+  if (['verify', 'join', 'full'].includes(mode)) await loadVerify(id);
   const lang = await getCurrentLang();
   const rt = getRuntime(id);
 
@@ -600,7 +632,7 @@ ipcMain.handle('publish:start', async (_event, payload) => {
 
   const minSec = Number(delayMinSec);
   const maxSec = Number(delayMaxSec);
-  if (!['activity', 'warmup', 'verify'].includes(mode) && (!Number.isFinite(minSec) || !Number.isFinite(maxSec) || minSec < 0 || maxSec < minSec)) {
+  if (!['activity', 'warmup', 'verify', 'join'].includes(mode) && (!Number.isFinite(minSec) || !Number.isFinite(maxSec) || minSec < 0 || maxSec < minSec)) {
     sendLog(id, t(lang, 'publish.badDelay'));
     return { ok: false, error: 'delay' };
   }
@@ -661,15 +693,12 @@ ipcMain.handle('publish:start', async (_event, payload) => {
     },
   };
 
-  // Запускаємо у фоні, щоб не блокувати IPC-відповідь
-  const task =
-    mode === 'verify'
-      ? verifyGroups({
-          groups,
+  const verifyArgs = (list, extra = {}) => ({
+          groups: list,
           lang,
           cookiesPath: cookiesPathFor(id),
           accountId: id,
-          blacklist,
+          blacklist: bl,
           worklist,
           startAt,
           waitUntilStart,
@@ -686,6 +715,7 @@ ipcMain.handle('publish:start', async (_event, payload) => {
           shouldPause: common.shouldPause,
           onResult: (url, entry) => saveVerify(id, url, entry),
           autoJoin: payload.autoJoin !== false,
+          ...extra,
           autoForm: payload.autoForm !== false,
           formAnswer: String(payload.formAnswer ?? '').slice(0, 300),
           dailyJoinLimit: Math.max(0, Math.floor(Number(payload.dailyJoinLimit) || 0)),
@@ -694,7 +724,75 @@ ipcMain.handle('publish:start', async (_event, payload) => {
             await incrementDailyCount(joinStatsPathFor(id));
             await sendStats();
           },
-        })
+        });
+  const publishArgs = (list, extra = {}) => ({
+          ...common,
+          groups: list,
+          isBlacklisted: (url) => bl.has(url),
+          onBlacklist: (url, info) => bl.add(url, { reason: info.reason, account: id, counts: null }),
+          autoJoin: payload.autoJoin !== false,
+          ...extra,
+          autoForm: payload.autoForm !== false,
+          formAnswer: String(payload.formAnswer ?? '').slice(0, 300),
+          dailyJoinLimit: Math.max(0, Math.floor(Number(payload.dailyJoinLimit) || 0)),
+          getPendingSince: async (key) => (await readPendingSince(id))[key] ?? null,
+          setPendingSince: async (key, date) => {
+            const map = await readPendingSince(id);
+            map[key] = date;
+            await mkdir(path.dirname(pendingSincePathFor(id)), { recursive: true });
+            await writeFile(pendingSincePathFor(id), JSON.stringify(map));
+          },
+          getJoinCount: () => loadDailyCount(joinStatsPathFor(id)),
+          getPostedToday: (url) => postedToday(id, url),
+          onJoin: async () => {
+            await incrementDailyCount(joinStatsPathFor(id));
+            await sendStats();
+          },
+          onResult: (url, outcome) => saveResult(id, url, outcome),
+          text,
+          imagePath: imagePath || null,
+          prepareImageClipboard,
+          withClipboardLock,
+          onSuccess: async () => {
+            const count = await incrementDailyCount(statsPathFor(id));
+            sendLog(id, `✔ +1 (${count})`);
+            await sendStats();
+          },
+        });
+
+  /** «Цикл»: 1) вступ до груп → 2) публікація → 3) фінальна верифікація постів. */
+  const runFull = async () => {
+    common.onLog(t(lang, 'cycle.stage1'));
+    const okGroups = new Set();
+    const baseVerify = verifyArgs(groups, { joinOnly: true, ignoreKnown: true, autoJoin: true });
+    await verifyGroups({
+      ...baseVerify,
+      onResult: async (url, entry) => {
+        if (entry.status === 'member' || entry.reason === 'justJoined') okGroups.add(groupKey(url));
+        await baseVerify.onResult(url, entry);
+      },
+    });
+    if (rt.stop || rt.blocked) return;
+    const postable = groups.filter((u) => okGroups.has(groupKey(u)));
+    if (postable.length === 0) {
+      common.onLog(t(lang, 'cycle.noGroupsForPost'));
+      return;
+    }
+    common.onLog(t(lang, 'cycle.stage2', { total: postable.length }));
+    await publishToGroups(publishArgs(postable, { autoJoin: false }));
+    if (rt.stop || rt.blocked) return;
+    common.onLog(t(lang, 'cycle.stage3', { total: postable.length }));
+    await verifyGroups(verifyArgs(postable, { ignoreKnown: true, autoJoin: false }));
+  };
+
+  // Запускаємо у фоні, щоб не блокувати IPC-відповідь
+  const task =
+    mode === 'verify'
+      ? verifyGroups(verifyArgs(groups))
+      : mode === 'join'
+      ? verifyGroups(verifyArgs(groups, { joinOnly: true, ignoreKnown: true, autoJoin: true }))
+      : mode === 'full'
+      ? runFull()
       : mode === 'warmup'
       ? runWarmup({
           groups,
@@ -734,38 +832,7 @@ ipcMain.handle('publish:start', async (_event, payload) => {
             await sendStats();
           },
         })
-      : publishToGroups({
-          ...common,
-          isBlacklisted: (url) => blacklist.has(url),
-          onBlacklist: (url, info) => blacklist.add(url, { reason: info.reason, account: id, counts: null }),
-          autoJoin: payload.autoJoin !== false,
-          autoForm: payload.autoForm !== false,
-          formAnswer: String(payload.formAnswer ?? '').slice(0, 300),
-          dailyJoinLimit: Math.max(0, Math.floor(Number(payload.dailyJoinLimit) || 0)),
-          getPendingSince: async (key) => (await readPendingSince(id))[key] ?? null,
-          setPendingSince: async (key, date) => {
-            const map = await readPendingSince(id);
-            map[key] = date;
-            await mkdir(path.dirname(pendingSincePathFor(id)), { recursive: true });
-            await writeFile(pendingSincePathFor(id), JSON.stringify(map));
-          },
-          getJoinCount: () => loadDailyCount(joinStatsPathFor(id)),
-          getPostedToday: (url) => postedToday(id, url),
-          onJoin: async () => {
-            await incrementDailyCount(joinStatsPathFor(id));
-            await sendStats();
-          },
-          onResult: (url, outcome) => saveResult(id, url, outcome),
-          text,
-          imagePath: imagePath || null,
-          prepareImageClipboard,
-          withClipboardLock,
-          onSuccess: async () => {
-            const count = await incrementDailyCount(statsPathFor(id));
-            sendLog(id, `✔ +1 (${count})`);
-            await sendStats();
-          },
-        });
+      : publishToGroups(publishArgs(groups));
 
   task
     .catch((err) => {
@@ -801,7 +868,7 @@ ipcMain.handle('publish:pause', async (_event, id) => {
   const rt = getRuntime(id);
   rt.pause = true;
   const lang = await getCurrentLang();
-  sendLog(id, t(lang, `${rt.mode === 'warmup' ? 'activity' : rt.mode}.paused`));
+  sendLog(id, t(lang, `${rt.mode === 'warmup' ? 'activity' : rt.mode === 'join' ? 'verify' : rt.mode === 'full' ? 'publish' : rt.mode}.paused`));
   broadcast('account:status', id, 'paused', {});
   return { ok: true };
 });
@@ -811,7 +878,7 @@ ipcMain.handle('publish:resume', async (_event, id) => {
   const rt = getRuntime(id);
   rt.pause = false;
   const lang = await getCurrentLang();
-  sendLog(id, t(lang, `${rt.mode === 'warmup' ? 'activity' : rt.mode}.resumed`));
+  sendLog(id, t(lang, `${rt.mode === 'warmup' ? 'activity' : rt.mode === 'join' ? 'verify' : rt.mode === 'full' ? 'publish' : rt.mode}.resumed`));
   broadcast('account:status', id, 'running', {});
   return { ok: true };
 });

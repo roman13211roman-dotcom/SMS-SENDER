@@ -34,10 +34,10 @@ contextBridge.exposeInMainWorld('api', {
   resumePublish: (id) => ipcRenderer.invoke('publish:resume', id),
 
   // Верифікація груп та постійний чорний список (лише читання)
-  loadBlacklist: () => ipcRenderer.invoke('blacklist:list'),
+  loadBlacklist: (id) => ipcRenderer.invoke('blacklist:list', id),
   revealShots: (id) => ipcRenderer.invoke('trace:reveal', id),
-  revealBlacklist: () => ipcRenderer.invoke('blacklist:reveal'),
-  loadWorklist: () => ipcRenderer.invoke('worklist:list'),
+  revealBlacklist: (id) => ipcRenderer.invoke('blacklist:reveal', id),
+  loadWorklist: (id) => ipcRenderer.invoke('worklist:list', id),
   loadVerify: () => ipcRenderer.invoke('verify:load'),
   importGroups: () => ipcRenderer.invoke('groups:import'),
   onVerifyUpdate: (callback) =>

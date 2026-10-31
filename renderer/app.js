@@ -48,6 +48,8 @@ const modePublishEl = el('modePublish');
 const modeActivityEl = el('modeActivity');
 const modeWarmupEl = el('modeWarmup');
 const modeVerifyEl = el('modeVerify');
+const modeJoinEl = el('modeJoin');
+const modeFullEl = el('modeFull');
 const btnUseWorkEl = el('btnUseWork');
 const workRowEl = el('workRow');
 const verifyOnlyEl = el('verifyOnly');
@@ -141,7 +143,7 @@ function groupKeyOf(url) {
 }
 /** Групи, з якими працює режим «Публікація»: або «Групи в роботу», або вставлений список. */
 function effectiveGroups(account) {
-  if (account && (account.mode ?? 'publish') === 'publish' && account.useWorklist) {
+  if (account && ['publish', 'full'].includes(account.mode ?? 'publish') && account.useWorklist) {
     return workItems.map((g) => g.url).filter((u) => !isBlacklistedUrl(u));
   }
   return account?.groups ?? [];
@@ -275,7 +277,9 @@ function applyTranslations() {
   modeActivityEl.textContent = ui.modeActivity;
   modeWarmupEl.textContent = ui.modeWarmup;
   modeVerifyEl.textContent = ui.modeVerify;
-  el('verifyHint').textContent = ui.verifyHint;
+  modeJoinEl.textContent = ui.modeJoin;
+  modeFullEl.textContent = ui.modeFull;
+  el('verifyHint').textContent = accountMode === 'join' ? ui.joinHint : accountMode === 'full' ? ui.fullHint : ui.verifyHint;
   btnImportGroupsEl.textContent = ui.btnImportGroups;
   btnDropBlackEl.textContent = ui.btnDropBlack;
   el('verifyTitle').textContent = ui.verifyTitle;
@@ -336,7 +340,7 @@ function applyTranslations() {
   btnLogin.textContent = ui.btnLogin;
   btnConfirmLogin.textContent = ui.btnConfirmLogin;
   btnStart.textContent =
-    accountMode === 'verify' ? ui.btnStartVerify : accountMode === 'warmup' ? ui.btnStartWarmup : accountMode === 'activity' ? ui.btnStartActivity : ui.btnStart;
+    accountMode === 'join' ? ui.btnStartJoin : accountMode === 'full' ? ui.btnStartFull : accountMode === 'verify' ? ui.btnStartVerify : accountMode === 'warmup' ? ui.btnStartWarmup : accountMode === 'activity' ? ui.btnStartActivity : ui.btnStart;
   btnStartAll.textContent = ui.btnStartAll;
   btnStopAll.textContent = ui.btnStopAll;
   btnStop.textContent = ui.btnStop;
@@ -459,11 +463,11 @@ function renderVerify() {
     groupCell.title = url;
     const statusCell = document.createElement('td');
     const chip = document.createElement('span');
-    chip.className = `chip chip-${status === 'good' ? 'published' : status === 'blacklisted' ? 'failed' : status === 'pending' ? 'pending' : status === 'working' ? 'working' : 'none'}`;
+    chip.className = `chip chip-${status === 'good' || status === 'member' ? 'published' : status === 'blacklisted' ? 'failed' : status === 'pending' ? 'pending' : status === 'working' ? 'working' : 'none'}`;
     chip.textContent = ui.verifyStatus[status] ?? status;
     statusCell.appendChild(chip);
     if (entry && status !== 'working') {
-      if (status === 'good') counts.good++;
+      if (status === 'good' || status === 'member') counts.good++;
       else if (status === 'blacklisted') counts.blacklisted++;
       else if (status === 'pending') counts.pending++;
       else if (status !== 'none') counts.other++;
@@ -495,7 +499,7 @@ function renderVerify() {
 }
 
 async function refreshBlacklist() {
-  [blacklistItems, workItems] = await Promise.all([window.api.loadBlacklist(), window.api.loadWorklist()]);
+  [blacklistItems, workItems] = await Promise.all([window.api.loadBlacklist(activeId), window.api.loadWorklist(activeId)]);
   renderVerify();
   renderResults();
   updateControls();
@@ -632,10 +636,12 @@ function updateControls() {
     accountMode === 'activity' || accountMode === 'warmup'
       ? ui.accountTodayActivity(count)
       : ui.accountToday(count);
-  statusLineEl.textContent = accountMode === 'verify' ? statusText(account.id) : `${statusText(account.id)} · ${todayText}`;
+  statusLineEl.textContent = accountMode === 'verify' || accountMode === 'join' ? statusText(account.id) : `${statusText(account.id)} · ${todayText}`;
 
   for (const [button, value] of [
+    [modeJoinEl, 'join'],
     [modePublishEl, 'publish'],
+    [modeFullEl, 'full'],
     [modeActivityEl, 'activity'],
     [modeWarmupEl, 'warmup'],
     [modeVerifyEl, 'verify'],
@@ -643,19 +649,22 @@ function updateControls() {
     button.disabled = busy;
     button.classList.toggle('mode-btn-active', accountMode === value);
   }
-  publishOnlyEl.hidden = accountMode !== 'publish';
-  for (const node of resultsBlockEls) node.hidden = accountMode !== 'publish';
+  const publishLike = accountMode === 'publish' || accountMode === 'full';
+  const verifyLike = accountMode === 'verify' || accountMode === 'join';
+  publishOnlyEl.hidden = !publishLike;
+  for (const node of resultsBlockEls) node.hidden = !publishLike;
   activityOnlyEl.hidden = accountMode !== 'activity';
   warmupOnlyEl.hidden = accountMode !== 'warmup';
-  verifyOnlyEl.hidden = accountMode !== 'verify';
-  workRowEl.hidden = accountMode !== 'publish';
+  verifyOnlyEl.hidden = !(verifyLike || accountMode === 'full');
+  el('verifyHint').textContent = accountMode === 'join' ? ui.joinHint : accountMode === 'full' ? ui.fullHint : ui.verifyHint;
+  workRowEl.hidden = !publishLike;
   btnUseWorkEl.textContent = ui.btnUseWork(workItems.length);
   btnUseWorkEl.classList.toggle('mode-btn-active', Boolean(account.useWorklist));
   btnUseWorkEl.disabled = busy;
   el('workHint').textContent = account.useWorklist ? ui.workActive(effectiveGroups(account).length) : ui.workHint;
-  groupsListEl.disabled = accountMode === 'publish' && Boolean(account.useWorklist);
-  verifyResultsEl.hidden = accountMode !== 'verify';
-  delayRowEl.hidden = accountMode === 'activity' || accountMode === 'warmup' || accountMode === 'verify';
+  groupsListEl.disabled = publishLike && Boolean(account.useWorklist);
+  verifyResultsEl.hidden = !(verifyLike || accountMode === 'full');
+  delayRowEl.hidden = accountMode === 'activity' || accountMode === 'warmup' || verifyLike;
   btnImportGroupsEl.disabled = busy;
   btnDropBlackEl.disabled = busy;
 
@@ -722,6 +731,7 @@ function selectAccount(id) {
   loadFormFromAccount();
   applyTranslations();
   scheduleSave();
+  refreshBlacklist();
 }
 
 // --- Журнал ---
@@ -855,6 +865,8 @@ modePublishEl.addEventListener('click', () => setAccountMode('publish'));
 modeActivityEl.addEventListener('click', () => setAccountMode('activity'));
 modeWarmupEl.addEventListener('click', () => setAccountMode('warmup'));
 modeVerifyEl.addEventListener('click', () => setAccountMode('verify'));
+modeJoinEl.addEventListener('click', () => setAccountMode('join'));
+modeFullEl.addEventListener('click', () => setAccountMode('full'));
 
 btnImportGroupsEl.addEventListener('click', async () => {
   const account = activeAccount();
@@ -884,7 +896,7 @@ btnDropBlackEl.addEventListener('click', () => {
   appendLog(account.id, getUiText(currentLang).droppedBlack(before.length - kept.length));
 });
 
-btnRevealBlackEl.addEventListener('click', () => window.api.revealBlacklist());
+btnRevealBlackEl.addEventListener('click', () => window.api.revealBlacklist(activeId));
 
 btnUseWorkEl.addEventListener('click', () => {
   const account = activeAccount();
@@ -904,6 +916,7 @@ btnAddAccount.addEventListener('click', () => {
   const account = newAccountObject();
   accounts.push(account);
   activeId = account.id;
+  refreshBlacklist();
   loadFormFromAccount();
   applyTranslations();
   scheduleSave();
@@ -929,6 +942,7 @@ btnDeleteAccount.addEventListener('click', async () => {
   delete runtime[account.id];
   delete sessions[account.id];
   activeId = accounts[Math.min(index, accounts.length - 1)].id;
+  refreshBlacklist();
   loadFormFromAccount();
   applyTranslations();
   scheduleSave();
@@ -989,10 +1003,10 @@ async function startAccount(id) {
   const accountMode = account.mode ?? 'publish';
   const activityMode = accountMode === 'activity';
   const warmupMode = accountMode === 'warmup';
-  const verifyMode = accountMode === 'verify';
+  const verifyMode = accountMode === 'verify' || accountMode === 'join';
   const text = (account.text ?? '').trim();
   const groups = effectiveGroups(account);
-  const useWorklist = Boolean(account.useWorklist) && accountMode === 'publish';
+  const useWorklist = Boolean(account.useWorklist) && (accountMode === 'publish' || accountMode === 'full');
   const imagePath = account.imagePath || null;
   const delayMinSec = Number(account.delayMinSec);
   const delayMaxSec = Number(account.delayMaxSec);
@@ -1009,7 +1023,7 @@ async function startAccount(id) {
     const black = groups.filter(isBlacklistedUrl).length;
     if (!window.confirm(ui.confirmVerify(groups.length, black))) return false;
   }
-  if (accountMode === 'publish' && !text && !imagePath) {
+  if ((accountMode === 'publish' || accountMode === 'full') && !text && !imagePath) {
     appendLog(id, ui.errNoContent, true);
     return false;
   }
@@ -1136,8 +1150,9 @@ window.api.onVerifyUpdate((id, url, entry) => {
   const key = groupKeyOf(url);
   if (!key) return;
   (verifyData[id] ??= {})[key] = entry;
+  if (id !== activeId) return;
   if (entry.status === 'blacklisted' || entry.status === 'good') refreshBlacklist();
-  else if (id === activeId) renderVerify();
+  else renderVerify();
 });
 
 window.api.onAccountBlocked((id, reason) => {
@@ -1189,8 +1204,8 @@ async function init() {
   ]);
   results = loadedResults ?? {};
   verifyData = (await window.api.loadVerify()) ?? {};
-  blacklistItems = (await window.api.loadBlacklist()) ?? [];
-  workItems = (await window.api.loadWorklist()) ?? [];
+  blacklistItems = (await window.api.loadBlacklist(activeId)) ?? [];
+  workItems = (await window.api.loadWorklist(activeId)) ?? [];
   maxAccounts = limits.maxAccounts;
   stats = loadedStats;
   sessions = loadedSessions;
@@ -1216,6 +1231,7 @@ async function init() {
 
   loadFormFromAccount();
   applyTranslations();
+  refreshBlacklist();
 }
 
 init();

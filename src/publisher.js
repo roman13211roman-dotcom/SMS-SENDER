@@ -27,6 +27,7 @@
  */
 import { access } from 'node:fs/promises';
 import { groupKey } from './blacklist.js';
+import { countItems } from './verifier.js';
 import { t } from './i18n.js';
 import { todayKey } from './warmup.js';
 import { noopTracer } from './trace.js';
@@ -410,6 +411,13 @@ async function hasPendingInList(page, groupUrl, trace) {
   if (verdict === 'unknown') await trace.snap('pending-list-unclear', page);
   if (verdict === 'verification') await trace.snap('verification', page);
   await assertNotBlocked(page);
+  // 2 і більше постів на розгляді → група підлягає чорному списку (швидко пропускаємо).
+  if (verdict === 'yes') {
+    const text = await page.evaluate(() => document.body?.innerText ?? '').catch(() => '');
+    const n = countItems(text);
+    trace.event('pending.count', { url: groupUrl, n });
+    if (n >= 2) verdict = 'many';
+  }
   await page.goto(base, { waitUntil: 'domcontentloaded', timeout: 60000 }).catch(() => {});
   return verdict;
 }
@@ -453,6 +461,10 @@ async function postToGroup({
   };
 
   const listVerdict = await hasPendingInList(page, groupUrl, trace);
+  if (listVerdict === 'many') {
+    onLog(t(lang, 'publish.pendingMany', { current }));
+    return { status: 'failed', reason: 'pendingMany' };
+  }
   if (listVerdict === 'verification') {
     // Адміни перевіряють нових учасників: пост усе одно можна надіслати — він піде на розгляд.
     const since = await getPendingSince(pendingKey);
@@ -779,7 +791,7 @@ export async function publishToGroups({
       // Знімок екрана для КОЖНОГО результату (опубліковано / пост на розгляді /
       // вступ на розгляді / не вдалося) — щоб потім можна було все переаналізувати.
       // Пост видалено/відхилено адміністраторами → група назавжди в чорному списку.
-      if (outcome.status === 'failed' && (outcome.reason === 'removed' || outcome.reason === 'declined')) {
+      if (outcome.status === 'failed' && ['removed', 'declined', 'pendingMany'].includes(outcome.reason)) {
         await onBlacklist(url, { reason: outcome.reason }).catch(() => {});
       }
       if (outcome.reason !== 'blocked') {

@@ -160,7 +160,7 @@ export async function readMembership(page, base, { timeoutMs = 25000, trace = no
  * Перевіряє одну групу. Повертає { status, reason, counts }.
  * Кидає BlockedError, якщо Facebook показав блокування.
  */
-export async function verifyOneGroup(page, url, { trace = noopTracer, shouldStop = () => false, tabTimeoutMs = 22000, join = null } = {}) {
+export async function verifyOneGroup(page, url, { trace = noopTracer, shouldStop = () => false, tabTimeoutMs = 22000, join = null, joinOnly = false } = {}) {
   const base = groupBaseUrl(url);
   const counts = { posted: null, removed: null, declined: null, pending: null };
   if (!base) return { status: 'unknown', reason: 'badUrl', counts };
@@ -185,6 +185,8 @@ export async function verifyOneGroup(page, url, { trace = noopTracer, shouldStop
   }
   if (membership === 'pending') return { status: 'noAccess', reason: 'joinPending', counts };
   if (membership !== 'member') return { status: 'unknown', reason: 'membershipUnclear', counts };
+  // Етап «Вступ до груп»: вже учасник — нічого більше не робимо, швидко йдемо далі.
+  if (joinOnly) return { status: 'member', reason: 'alreadyMember', counts };
 
   for (const tab of ['posted', 'removed', 'declined', 'pending']) {
     if (shouldStop()) return { status: 'unknown', reason: 'stopped', counts };
@@ -231,6 +233,8 @@ export async function verifyGroups({
   createBrowser = launchChrome,
   tabTimeoutMs = 22000,
   pauseScale = 1,
+  joinOnly = false,
+  ignoreKnown = false,
   autoJoin = true,
   autoForm = true,
   formAnswer = '',
@@ -302,7 +306,7 @@ export async function verifyGroups({
         continue;
       }
       const prev = getKnown(url);
-      if (prev?.status === 'good') {
+      if (!ignoreKnown && prev?.status === 'good') {
         counters.good++;
         counters.skipped++;
         onLog(t(lang, 'verify.skipGood', { current }));
@@ -319,7 +323,8 @@ export async function verifyGroups({
           trace,
           shouldStop,
           tabTimeoutMs,
-          join: autoJoin
+          joinOnly,
+          join: autoJoin || joinOnly
             ? { autoForm, formAnswer, onLog, lang, current, limit: dailyJoinLimit, getCount: getJoinCount, onJoin }
             : null,
         });
@@ -355,6 +360,7 @@ export async function verifyGroups({
         counters.good++;
       }
       else if (verdict.status === 'pending') counters.pending++;
+      else if (verdict.status === 'member') counters.good++;
       else counters.other++;
 
       trace.event('verify.end', { n: current, url, ...entry });
@@ -365,6 +371,7 @@ export async function verifyGroups({
       sinceBreak++;
       if (i < list.length - 1 && !shouldStop()) {
         let wait = (1500 + Math.random() * 2500) * pauseScale;
+        if (joinOnly && verdict.status === 'member') wait = (400 + Math.random() * 500) * pauseScale;
         if (verdict.joined || verdict.joinAttempted) wait += (6000 + Math.random() * 6000) * pauseScale;
         if (sinceBreak >= 30) {
           sinceBreak = 0;
