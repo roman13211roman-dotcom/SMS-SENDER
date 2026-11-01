@@ -450,12 +450,14 @@ async function postToGroup({
   onLog(t(lang, 'publish.checkingExisting', { current }));
   const pendingKey = groupBaseUrl(groupUrl);
   const today = todayKey();
+  // Пост на розгляді блокує новий протягом 24 годин від надсилання (старі записи — за датою).
+  const isRecent = (since) => (typeof since === 'number' ? Date.now() - since < 24 * 3600 * 1000 : Boolean(since && since >= today));
   // Старий пост на розгляді блокує новий лише в день надсилання; з наступного
   // дня (якщо адмін так і не розглянув) публікуємо новий.
   const shouldSkipForPending = async () => {
     const since = await getPendingSince(pendingKey);
     // Немає запису — пост надіслано раніше (до цієї версії), тож він «старий».
-    if (since && since >= today) return true;
+    if (isRecent(since)) return true;
     onLog(t(lang, since ? 'publish.pendingOld' : 'publish.pendingOldUnknown', { current, date: since }));
     return false;
   };
@@ -468,7 +470,7 @@ async function postToGroup({
   if (listVerdict === 'verification') {
     // Адміни перевіряють нових учасників: пост усе одно можна надіслати — він піде на розгляд.
     const since = await getPendingSince(pendingKey);
-    if (since && since >= today) {
+    if (isRecent(since)) {
       onLog(t(lang, 'publish.pendingSkip', { current }));
       return { status: 'pending', reason: 'already' };
     }
@@ -531,7 +533,7 @@ async function postToGroup({
 
   const verdict = await confirmPostOutcome(page, { groupUrl, postText, onLog, lang, current, baseline, trace });
   if (verdict === 'pending' || verdict === 'verification') {
-    await setPendingSince(pendingKey, today);
+    await setPendingSince(pendingKey, Date.now());
     return { status: 'pending', reason: 'posted' };
   }
   if (verdict === 'published') return { status: 'published' };

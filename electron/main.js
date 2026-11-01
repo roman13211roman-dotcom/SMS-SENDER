@@ -213,14 +213,18 @@ async function postedToday(id, url) {
   const today = new Date().toDateString();
   for (const [u, v] of Object.entries(groups)) {
     if (groupKey(u) !== key) continue;
-    if ((v.status === 'published' || v.status === 'pending') && v.at && new Date(v.at).toDateString() === today) return v.status;
+    if (v.status === 'published' && v.at && new Date(v.at).toDateString() === today) return v.status;
+    // Пост на розгляді блокує новий протягом 24 годин.
+    if (v.status === 'pending' && v.at && Date.now() - v.at < 24 * 3600 * 1000) return v.status;
   }
   return null;
 }
 
 async function saveResult(id, url, outcome) {
   const groups = await loadResults(id);
-  const entry = { status: outcome.status, reason: outcome.reason ?? '', at: Date.now() };
+  // Пропуск «вже було» не оновлює час: інакше 24-годинне вікно продовжувалося б нескінченно.
+  const keepAt = ['alreadyToday', 'already'].includes(outcome.reason) && groups[url]?.at;
+  const entry = { status: outcome.status, reason: outcome.reason ?? '', at: keepAt || Date.now() };
   groups[url] = entry;
   if (outcome.status !== 'working') {
     await mkdir(path.dirname(resultsPathFor(id)), { recursive: true });
