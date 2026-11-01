@@ -56,6 +56,7 @@ const publishResultsHeadEl = el('publishResultsHead');
 const btnImportGroupsEl = el('btnImportGroups');
 const btnDropBlackEl = el('btnDropBlack');
 const btnRevealBlackEl = el('btnRevealBlack');
+const btnResetBlackEl = el('btnResetBlack');
 const verifyBodyEl = el('verifyBody');
 const blackListEl = el('blackList');
 const warmupOnlyEl = el('warmupOnly');
@@ -291,6 +292,7 @@ function applyTranslations() {
   el('verifyEmpty').textContent = ui.verifyEmpty;
   el('blackNote').textContent = ui.blackNote;
   btnRevealBlackEl.textContent = ui.btnRevealBlack;
+  btnResetBlackEl.textContent = ui.btnResetBlack;
   el('warmCommentTextsLabel').textContent = ui.warmCommentTextsLabel;
   btnResetWarmupEl.textContent = ui.btnResetWarmup;
   el('warmupHint').textContent = ui.warmupHint;
@@ -393,7 +395,7 @@ function renderResults() {
     statusCell.appendChild(chip);
 
     if (entry && status !== 'working') {
-      if (status in counts) counts[status]++;
+      if (status in counts && (entry.at ?? 0) >= (account.sessionStart ?? 0)) counts[status]++;
       const note = document.createElement('span');
       note.className = 'status-note';
       const time = new Date(entry.at).toLocaleString(currentLang === 'uk' ? 'uk-UA' : 'en-GB', {
@@ -405,7 +407,7 @@ function renderResults() {
       const reasonText = ui.reasonLabels[`${status}.${entry.reason}`] ?? ui.reasonLabels[entry.reason] ?? '';
       note.textContent = reasonText ? `${reasonText} · ${time}` : time;
       statusCell.appendChild(note);
-      if (status === 'failed') {
+      if (status === 'failed' && (entry.at ?? 0) >= (account.sessionStart ?? 0)) {
         const label = ui.reasonLabels[entry.reason] ?? entry.reason;
         reasons[label] = (reasons[label] ?? 0) + 1;
       }
@@ -463,11 +465,14 @@ function renderVerify() {
     groupCell.title = url;
     const statusCell = document.createElement('td');
     const chip = document.createElement('span');
-    chip.className = `chip chip-${status === 'good' || status === 'member' ? 'published' : status === 'blacklisted' ? 'failed' : status === 'pending' ? 'pending' : status === 'working' ? 'working' : 'none'}`;
+    chip.className = `chip chip-${status === 'good' || status === 'member' ? 'published' : status === 'blacklisted' || status === 'rejected' ? 'failed' : status === 'pending' ? 'pending' : status === 'working' ? 'working' : 'none'}`;
     chip.textContent = ui.verifyStatus[status] ?? status;
     statusCell.appendChild(chip);
     if (entry && status !== 'working') {
-      if (status === 'good' || status === 'member') counts.good++;
+      const inSession = (entry.at ?? 0) >= (account.sessionStart ?? 0);
+      if (!inSession) {
+        // лічильники рахують лише поточну сесію
+      } else if (status === 'good' || status === 'member') counts.good++;
       else if (status === 'blacklisted') counts.blacklisted++;
       else if (status === 'pending') counts.pending++;
       else if (status !== 'none') counts.other++;
@@ -898,6 +903,14 @@ btnDropBlackEl.addEventListener('click', () => {
   appendLog(account.id, getUiText(currentLang).droppedBlack(before.length - kept.length));
 });
 
+btnResetBlackEl.addEventListener('click', async () => {
+  const account = activeAccount();
+  if (!account || isBusy(account.id)) return;
+  if (!window.confirm(getUiText(currentLang).confirmResetBlack(blacklistItems.length))) return;
+  await window.api.resetBlacklist(account.id);
+  await refreshBlacklist();
+});
+
 btnRevealBlackEl.addEventListener('click', () => window.api.revealBlacklist(activeId));
 
 btnUseWorkEl.addEventListener('click', () => {
@@ -1056,6 +1069,9 @@ async function startAccount(id) {
   }
 
   const state = rt(id);
+  // Нова сесія: лічильники обнуляються (рахуються лише результати з цього моменту).
+  account.sessionStart = Date.now();
+  scheduleSave();
   state.done = 0;
   state.total = activityMode || warmupMode ? 0 : groups.length;
   state.counts = null;

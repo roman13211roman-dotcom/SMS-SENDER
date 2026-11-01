@@ -36,6 +36,7 @@ contextBridge.exposeInMainWorld('api', {
   // Верифікація груп та постійний чорний список (лише читання)
   loadBlacklist: (id) => ipcRenderer.invoke('blacklist:list', id),
   revealShots: (id) => ipcRenderer.invoke('trace:reveal', id),
+  resetBlacklist: (id) => ipcRenderer.invoke('blacklist:reset', id),
   revealBlacklist: (id) => ipcRenderer.invoke('blacklist:reveal', id),
   loadWorklist: (id) => ipcRenderer.invoke('worklist:list', id),
   loadVerify: () => ipcRenderer.invoke('verify:load'),

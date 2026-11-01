@@ -94,6 +94,12 @@ export function createBlacklist(files) {
       chain = chain.then(persist, persist);
       return chain.then(() => true);
     },
+    /** Повне очищення списку (кнопка «Обнулити»): очищає пам'ять і всі файли-копії. */
+    clear() {
+      entries.clear();
+      chain = chain.then(persist, persist);
+      return chain.then(() => true);
+    },
     /** Пакетне додавання (один запис на диск). Існуючі записи не змінюються. */
     addMany(items) {
       let added = 0;

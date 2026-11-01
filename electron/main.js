@@ -72,11 +72,15 @@ function blacklistFor(id) {
         path.join(app.getPath('userData'), `blacklist.${id}.mirror.json`),
       ]);
       await bl.load().catch((err) => logToFile(`Blacklist(${id}) load failed: ${err.message}`));
-      // Міграція: записи цього акаунта + початкові (seed / без акаунта).
-      const legacy = blacklist.list().filter((g) => !g.account || g.account === 'seed' || g.account === id);
-      if (legacy.length) {
-        const added = await bl.addMany(legacy.map((g) => ({ url: g.url, reason: g.reason, account: g.account || 'seed', counts: g.counts, at: g.at })));
-        if (added) logToFile(`Blacklist(${id}) migrated +${added}`);
+      // Одноразове обнулення: усі старі чорні списки (глобальні, початкові, мігровані) прибрано.
+      const marker = path.join(dir, 'blacklist-reset-v2.flag');
+      try {
+        await access(marker);
+      } catch {
+        await bl.clear().catch(() => {});
+        await mkdir(dir, { recursive: true });
+        await writeFile(marker, new Date().toISOString());
+        logToFile(`Blacklist(${id}) cleared (v2)`);
       }
       return bl;
     })();
@@ -96,7 +100,7 @@ async function workGroups(id) {
 async function importSeed() {
   try {
     const seed = JSON.parse(await readFile(path.join(__dirname, '..', 'src', 'seed', 'groups-seed.json'), 'utf-8'));
-    const black = await blacklist.addMany((seed.blacklist ?? []).map((x) => ({ ...x, account: x.account ?? 'seed' })));
+    const black = 0; // чорні списки з початкових даних більше не імпортуються
     const work = await worklist.addMany((seed.work ?? []).map((x) => ({ ...x, account: x.account ?? 'seed' })));
     logToFile(`Seed imported: blacklist +${black}, work +${work}`);
   } catch (err) {
@@ -451,6 +455,12 @@ ipcMain.handle('stats:load', async () => collectStats());
 ipcMain.handle('blacklist:list', async (_e, id) => (ID_PATTERN.test(String(id ?? '')) ? (await blacklistFor(id)).list() : []));
 ipcMain.handle('worklist:list', async (_e, id) => workGroups(id));
 
+ipcMain.handle('blacklist:reset', async (_e, id) => {
+  if (!ID_PATTERN.test(String(id ?? ''))) return { ok: false };
+  await (await blacklistFor(id)).clear();
+  return { ok: true };
+});
+
 ipcMain.handle('blacklist:reveal', async (_e, id) => {
   if (!ID_PATTERN.test(String(id ?? ''))) return { ok: false };
   shell.showItemInFolder((await blacklistFor(id)).files[0]);
@@ -793,7 +803,19 @@ ipcMain.handle('publish:start', async (_event, payload) => {
     await publishToGroups(publishArgs(postable, { autoJoin: false }));
     if (rt.stop || rt.blocked) return;
     common.onLog(t(lang, 'cycle.stage3', { total: postable.length }));
-    await verifyGroups(verifyArgs(postable, { ignoreKnown: true, autoJoin: false }));
+    // Етап 3 виправляє помилки лічильників: підсумок верифікації перезаписує результати публікації.
+    const v3 = verifyArgs(postable, { ignoreKnown: true, autoJoin: false });
+    await verifyGroups({
+      ...v3,
+      onResult: async (url, entry) => {
+        await v3.onResult(url, entry);
+        let out = null;
+        if (entry.status === 'good') out = { status: 'published', reason: '' };
+        else if (entry.status === 'pending' || entry.reason === 'pendingMany') out = { status: 'pending', reason: 'posted' };
+        else if (entry.status === 'rejected') out = { status: 'failed', reason: entry.reason === 'neverPosted' ? 'notConfirmed' : entry.reason };
+        if (out) await saveResult(id, url, out);
+      },
+    });
   };
 
   // Запускаємо у фоні, щоб не блокувати IPC-відповідь

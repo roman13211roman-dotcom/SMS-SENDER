@@ -1,6 +1,6 @@
 {
   "name": "fb-group-publisher",
-  "version": "1.9.15",
+  "version": "1.9.16",
   "description": "Десктопна програма для автоматичної публікації постів і підписки на Facebook-групи (до 10 акаунтів одночасно)",
   "main": "electron/main.js",
   "type": "module",

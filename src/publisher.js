@@ -882,7 +882,7 @@ export async function publishToGroups({
       // Знімок екрана для КОЖНОГО результату (опубліковано / пост на розгляді /
       // вступ на розгляді / не вдалося) — щоб потім можна було все переаналізувати.
       // Пост видалено/відхилено адміністраторами → група назавжди в чорному списку.
-      if (outcome.status === 'failed' && ['removed', 'declined', 'pendingMany'].includes(outcome.reason)) {
+      if (outcome.status === 'failed' && outcome.reason === 'pendingMany') {
         await onBlacklist(url, { reason: outcome.reason }).catch(() => {});
       }
       if (outcome.reason !== 'blocked') {

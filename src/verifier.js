@@ -70,14 +70,15 @@ export function analyzeTabPage({ url, text }) {
  */
 export function decide(counts) {
   if (counts.posted === 'items') return { status: 'good', reason: 'posted' };
-  if (counts.removed === 'items') return { status: 'blacklisted', reason: 'removed' };
-  if (counts.declined === 'items') return { status: 'blacklisted', reason: 'declined' };
+  // Видалені/відхилені пости — це «не проходить», але в чорний список потрапляє лише випадок 2+ постів на розгляді.
+  if (counts.removed === 'items') return { status: 'rejected', reason: 'removed' };
+  if (counts.declined === 'items') return { status: 'rejected', reason: 'declined' };
   const all = ['posted', 'removed', 'declined', 'pending'].every((k) => counts[k] === 'empty' || counts[k] === 'items');
   if (!all) return { status: 'unknown', reason: 'unreadable' };
   // Кілька постів на розгляді одночасно — група не пропускає наші пости: чорний список.
   if (counts.pending === 'items' && (counts.pendingN ?? 0) >= 2) return { status: 'blacklisted', reason: 'pendingMany' };
   if (counts.pending === 'items') return { status: 'pending', reason: 'pendingOnly' };
-  return { status: 'blacklisted', reason: 'neverPosted' };
+  return { status: 'rejected', reason: 'neverPosted' };
 }
 
 async function snapshot(page) {
@@ -397,6 +398,7 @@ export async function verifyGroups({
       }
       else if (verdict.status === 'pending') counters.pending++;
       else if (verdict.status === 'member') counters.good++;
+      else if (verdict.status === 'rejected') counters.other++;
       else counters.other++;
 
       trace.event('verify.end', { n: current, url, ...entry });
