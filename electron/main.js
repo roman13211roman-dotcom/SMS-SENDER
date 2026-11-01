@@ -688,6 +688,11 @@ ipcMain.handle('publish:start', async (_event, payload) => {
     onStatus: (state, extra) => broadcast('account:status', id, state, extra ?? {}),
     shouldStop: () => rt.stop || rt.blocked,
     shouldPause: () => rt.pause,
+    // Немає інтернету → автоматична пауза; відновлення — вручну кнопкою «Продовжити».
+    onOffline: () => {
+      rt.pause = true;
+      broadcast('account:status', id, 'paused', {});
+    },
     onBlocked: (reason) => {
       if (rt.blocked) return;
       rt.blocked = true;
@@ -717,6 +722,7 @@ ipcMain.handle('publish:start', async (_event, payload) => {
           onBlocked: common.onBlocked,
           shouldStop: common.shouldStop,
           shouldPause: common.shouldPause,
+          onOffline: common.onOffline,
           onResult: (url, entry) => saveVerify(id, url, entry),
           autoJoin: payload.autoJoin !== false,
           ...extra,

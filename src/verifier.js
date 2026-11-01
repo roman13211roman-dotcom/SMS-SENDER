@@ -17,7 +17,7 @@ import { t } from './i18n.js';
 import { sleep, waitWithStop, waitWhilePaused } from './timing.js';
 import { launchChrome } from './chromeLauncher.js';
 import { assertNotBlocked, BlockedError, detectBlock } from './blockDetect.js';
-import { looksLikeLoginPage, detectGroupState, isLoggedOutPage, joinGroupFlow, confirmSessionLost } from './groupJoin.js';
+import { looksLikeLoginPage, detectGroupState, isLoggedOutPage, joinGroupFlow, confirmSessionLost, isOfflinePage } from './groupJoin.js';
 import { groupBaseUrl, groupKey } from './blacklist.js';
 import { noopTracer } from './trace.js';
 import { access } from 'node:fs/promises';
@@ -168,6 +168,7 @@ export async function verifyOneGroup(page, url, { trace = noopTracer, shouldStop
   // Спершу членство: не учасник → історії немає, у чорний список НЕ додаємо.
   const membership = await readMembership(page, base, { trace });
   await assertNotBlocked(page);
+  if (await isOfflinePage(page)) return { status: 'unknown', reason: 'offline', counts };
   if (looksLikeLoginPage(page.url()) || (await isLoggedOutPage(page))) return { status: 'unknown', reason: 'session', counts };
   if (membership === 'canJoin') {
     // Не учасник: за потреби вступаємо. Щойно вступивши, історії постів ще немає,
@@ -241,6 +242,7 @@ export async function verifyGroups({
   dailyJoinLimit = 0,
   getJoinCount = () => 0,
   onJoin = async () => {},
+  onOffline = () => {},
 }) {
   try {
     await access(cookiesPath);
@@ -346,17 +348,40 @@ export async function verifyGroups({
         await onResult(url, { status: 'unknown', reason: 'stopped', counts: verdict.counts, at: Date.now() });
         break;
       }
+      // Немає інтернету: ставимо на паузу (ручне відновлення) і повторюємо цю групу.
+      const pauseForOffline = async () => {
+        onLog(t(lang, 'session.offline'));
+        await onOffline();
+        await waitWhilePaused(shouldPause, shouldStop);
+      };
+      if (verdict.reason === 'offline') {
+        await pauseForOffline();
+        if (shouldStop()) {
+          onLog(t(lang, 'publish.stoppedByUser'));
+          break;
+        }
+        i--;
+        continue;
+      }
       if (verdict.reason === 'session') {
         onLog(t(lang, 'session.recheck', { current }));
         const check = await confirmSessionLost(page, { shouldStop });
+        if (check === 'offline') {
+          await pauseForOffline();
+          if (shouldStop()) {
+            onLog(t(lang, 'publish.stoppedByUser'));
+            break;
+          }
+          i--;
+          continue;
+        }
         if (check === 'ok' && sessionRetries < 3) {
           sessionRetries++;
           trace.event('session.falseAlarm', { n: current, url, retry: sessionRetries });
           i--; // повторюємо цю саму групу
           continue;
         }
-        if (check === 'offline') onLog(t(lang, 'session.offline'));
-        else onLog(t(lang, 'subscribe.sessionExpired'));
+        onLog(t(lang, 'subscribe.sessionExpired'));
         await onResult(url, { status: 'unknown', reason: 'session', counts: verdict.counts, at: Date.now() });
         break;
       }

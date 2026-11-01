@@ -28,7 +28,7 @@
 import { access } from 'node:fs/promises';
 import { groupKey } from './blacklist.js';
 import { countItems } from './verifier.js';
-import { confirmSessionLost } from './groupJoin.js';
+import { confirmSessionLost, isOfflinePage } from './groupJoin.js';
 import { t } from './i18n.js';
 import { todayKey } from './warmup.js';
 import { noopTracer } from './trace.js';
@@ -587,6 +587,7 @@ export async function publishToGroups({
   onProgress = () => {},
   shouldStop = () => false,
   shouldPause = () => false,
+  onOffline = () => {},
   prepareImageClipboard = null,
   onSuccess = () => {},
   startAt = null,
@@ -681,6 +682,7 @@ export async function publishToGroups({
       let acted = false; // чи робили реальні дії (вступ/публікація) — тоді потрібна затримка
       let blocked = false;
       let sessionExpired = false;
+      let offline = false;
       const tick = (sec) => onLog(t(lang, 'subscribe.stillLoading', { current, seconds: sec }));
       const groupStart = Date.now();
       trace.event('group.start', { n: current, total: groups.length, url });
@@ -703,10 +705,13 @@ export async function publishToGroups({
         }
         trace.event('group.state', { n: current, state, finalUrl: page.url(), ms: Date.now() - groupStart });
         await assertNotBlocked(page);
-        const loggedOut = !looksLikeLoginPage(page.url()) && (await isLoggedOutPage(page));
+        offline = await isOfflinePage(page);
+        const loggedOut = !offline && !looksLikeLoginPage(page.url()) && (await isLoggedOutPage(page));
         if (loggedOut) trace.event('session.loggedOut', { n: current, url: page.url() });
 
-        if (looksLikeLoginPage(page.url()) || loggedOut) {
+        if (offline) {
+          outcome = { status: 'failed', reason: 'offline' };
+        } else if (looksLikeLoginPage(page.url()) || loggedOut) {
           sessionExpired = true;
           outcome = { status: 'failed', reason: 'session' };
         } else {
@@ -784,6 +789,22 @@ export async function publishToGroups({
         }
       }
 
+      // Немає інтернету: пауза з ручним відновленням, потім повторюємо цю саму групу.
+      const pauseForOffline = async () => {
+        await page.close().catch(() => {});
+        onLog(t(lang, 'session.offline'));
+        await onOffline();
+        await waitWhilePaused(shouldPause, shouldStop);
+      };
+      if (offline) {
+        await pauseForOffline();
+        if (shouldStop()) {
+          onLog(t(lang, 'publish.stoppedByUser'));
+          break;
+        }
+        i--;
+        continue;
+      }
       if (outcome.reason === 'session') sessionExpired = true;
       counts[outcome.status] = (counts[outcome.status] ?? 0) + 1;
       onLog(
@@ -811,6 +832,15 @@ export async function publishToGroups({
         onLog(t(lang, 'session.recheck', { current }));
         const chk = await context.newPage();
         const check = await confirmSessionLost(chk, { shouldStop }).finally(() => chk.close().catch(() => {}));
+        if (check === 'offline') {
+          await onLog(t(lang, 'session.offline'));
+          await onOffline();
+          await waitWhilePaused(shouldPause, shouldStop);
+          if (shouldStop()) break;
+          counts[outcome.status] = Math.max(0, (counts[outcome.status] ?? 1) - 1);
+          i--;
+          continue;
+        }
         if (check === 'ok' && sessionRetries < 3) {
           sessionRetries++;
           trace.event('session.falseAlarm', { n: current, url, retry: sessionRetries });
@@ -818,7 +848,7 @@ export async function publishToGroups({
           i--; // повторюємо цю саму групу
           continue;
         }
-        onLog(t(lang, check === 'offline' ? 'session.offline' : 'subscribe.sessionExpired'));
+        onLog(t(lang, 'subscribe.sessionExpired'));
         break;
       }
       sessionRetries = 0;

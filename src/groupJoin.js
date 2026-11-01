@@ -456,3 +456,10 @@ export async function confirmSessionLost(page, { shouldStop = () => false } = {}
   }
   return 'offline';
 }
+
+/** Чи сторінка — це помилка мережі Chrome (немає інтернету / DNS / обрив). */
+export async function isOfflinePage(page) {
+  if (/^chrome-error:/i.test(page.url())) return true;
+  const text = await page.evaluate(() => (document.body?.innerText ?? '').slice(0, 1500)).catch(() => '');
+  return /(ERR_INTERNET_DISCONNECTED|ERR_NAME_NOT_RESOLVED|ERR_NETWORK_CHANGED|ERR_CONNECTION_(RESET|CLOSED|REFUSED|TIMED_OUT)|ERR_TIMED_OUT|No internet|Brak połączenia z internetem|Нет подключения к Интернету|Немає підключення до Інтернету)/i.test(text);
+}
