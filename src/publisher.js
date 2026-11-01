@@ -440,12 +440,70 @@ async function waitForComposerClosed(page, timeoutMs = 25000) {
   return 'open';
 }
 
+
+const BG_TOGGLE = /(show background options|background options|opcje tła|pokaż opcje tła|показати параметри фону|параметри фону|показать параметры фона|параметры фона)/i;
+
+/**
+ * Вмикає ЧЕРВОНЕ тло поста (палітра «Aa» у вікні створення допису).
+ * Facebook дозволяє тло лише для коротких текстових постів без фото й не в усіх групах —
+ * тому це «спроба»: якщо не вийшло, пост публікується без тла.
+ * @returns {Promise<boolean>}
+ */
+export async function applyRedBackground(page, composerScope) {
+  const toggle = composerScope.getByRole('button', { name: BG_TOGGLE }).first();
+  const toggleAlt = page.getByLabel(BG_TOGGLE).first();
+  let clicked = false;
+  for (const candidate of [toggle, toggleAlt]) {
+    if (await candidate.isVisible().catch(() => false)) {
+      await candidate.click({ timeout: 4000 }).then(() => (clicked = true)).catch(() => {});
+      if (clicked) break;
+    }
+  }
+  if (!clicked) return false;
+  await page.waitForTimeout(900);
+  const pos = await page.evaluate(() => {
+    const red = (css) => {
+      const m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(css ?? '');
+      return m ? { r: +m[1], g: +m[2], b: +m[3] } : null;
+    };
+    const isRed = (c) => c && c.r > 150 && c.g < 90 && c.b < 90;
+    const dialog = document.querySelector('[role="dialog"]') ?? document.body;
+    let best = null;
+    for (const node of dialog.querySelectorAll('*')) {
+      const rect = node.getBoundingClientRect();
+      if (rect.width < 18 || rect.width > 70 || rect.height < 18 || rect.height > 70) continue;
+      const st = getComputedStyle(node);
+      const color = red(st.backgroundColor) ?? red(st.backgroundImage);
+      if (isRed(color)) {
+        const score = color.r - color.g - color.b;
+        if (!best || score > best.score) best = { score, x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 };
+      }
+    }
+    return best;
+  });
+  if (!pos) return false;
+  await page.mouse.click(pos.x, pos.y);
+  await page.waitForTimeout(800);
+  // Перевірка: велика область вікна стала червоною.
+  return page.evaluate(() => {
+    const dialog = document.querySelector('[role="dialog"]') ?? document.body;
+    for (const node of [dialog, ...dialog.querySelectorAll('*')]) {
+      const rect = node.getBoundingClientRect();
+      if (rect.width < 250 || rect.height < 120) continue;
+      const st = getComputedStyle(node);
+      const m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(`${st.backgroundColor} ${st.backgroundImage}`);
+      if (m && +m[1] > 150 && +m[2] < 90 && +m[3] < 90) return true;
+    }
+    return false;
+  }).catch(() => false);
+}
+
 /**
  * Публікує пост у групі, де акаунт уже є учасником, і перевіряє результат.
  * @returns {Promise<{status:'published'|'pending'|'failed', reason?:string}>}
  */
 async function postToGroup({
-  page, lang, current, groupUrl, postText, imagePath, prepareImageClipboard, withClipboardLock, onLog, stateWasUnknown, trace = noopTracer, getPendingSince, setPendingSince,
+  page, lang, current, groupUrl, postText, imagePath, prepareImageClipboard, withClipboardLock, onLog, stateWasUnknown, trace = noopTracer, getPendingSince, setPendingSince, redBackground = false,
 }) {
   await dismissWelcomeDialog(page).catch(() => {});
   onLog(t(lang, 'publish.checkingExisting', { current }));
@@ -512,6 +570,12 @@ async function postToGroup({
   await page.keyboard.type(postText, { delay: 2 });
   await page.waitForTimeout(1000);
 
+  if (redBackground && !imagePath) {
+    const ok = await applyRedBackground(page, composerScope).catch(() => false);
+    trace.event('post.redBackground', { ok });
+    onLog(t(lang, ok ? 'publish.redBgOk' : 'publish.redBgFail', { current }));
+  }
+
   if (imagePath) {
     await attachImage(page, composerScope, textbox, imagePath, prepareImageClipboard, withClipboardLock, onLog, lang);
   }
@@ -573,6 +637,7 @@ export async function publishToGroups({
   autoJoin = true,
   autoForm = true,
   formAnswer = '',
+  redBackground = false,
   dailyJoinLimit = 0,
   trace = noopTracer,
   isBlacklisted = () => false,
@@ -766,6 +831,7 @@ export async function publishToGroups({
               trace,
               getPendingSince,
               setPendingSince,
+              redBackground,
             });
             if (joinFallback && outcome.status === 'failed' && ['noComposer', 'noButton'].includes(outcome.reason)) {
               onLog(t(lang, 'publish.joinPendingNoPost', { current }));

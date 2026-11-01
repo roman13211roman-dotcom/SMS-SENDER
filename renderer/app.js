@@ -103,6 +103,7 @@ const DEFAULT_ACTIVITY = {
 };
 const publishOnlyEl = el('publishOnly');
 const autoJoinEl = el('autoJoin');
+const redBgEl = el('redBg');
 const btnClearResultsEl = el('btnClearResults');
 const btnRevealShotsEl = el('btnRevealShots');
 const resultsBodyEl = el('resultsBody');
@@ -191,6 +192,7 @@ function newAccountObject() {
     mode: 'publish',
     dailyJoinLimit: 20,
     autoJoin: true,
+    redBackground: true,
     autoForm: true,
     formAnswer: '',
     activity: { ...DEFAULT_ACTIVITY },
@@ -236,6 +238,7 @@ function readFormIntoAccount() {
   }
   account.dailyJoinLimit = Math.max(0, Math.floor(numberOr(dailyJoinLimitEl.value, 20)));
   account.autoJoin = autoJoinEl.checked;
+  account.redBackground = redBgEl.checked;
   account.autoForm = autoFormEl.checked;
   account.formAnswer = formAnswerEl.value;
   account.warmup = { ...(account.warmup ?? { startDate: '' }), commentTexts: warmCommentTextsEl.value };
@@ -310,6 +313,7 @@ function applyTranslations() {
   groupsListEl.placeholder = ui.groupsPlaceholder;
   modePublishEl.textContent = ui.modePublish;
   el('autoJoinLabel').textContent = ui.autoJoinLabel;
+  el('redBgLabel').textContent = ui.redBgLabel;
   el('resultsTitle').textContent = ui.resultsTitle;
   btnClearResultsEl.textContent = ui.btnClearResults;
   btnRevealShotsEl.textContent = ui.btnRevealShots;
@@ -685,6 +689,7 @@ function loadFormFromAccount() {
   }
   dailyJoinLimitEl.value = account.dailyJoinLimit ?? 20;
   autoJoinEl.checked = account.autoJoin ?? true;
+  redBgEl.checked = account.redBackground ?? true;
   autoFormEl.checked = account.autoForm ?? true;
   formAnswerEl.value = account.formAnswer ?? '';
   formAnswerEl.disabled = !autoFormEl.checked;
@@ -829,6 +834,11 @@ btnClearImage.addEventListener('click', () => {
   if (!account) return;
   account.imagePath = '';
   updateImageLabel();
+  scheduleSave();
+});
+
+redBgEl.addEventListener('change', () => {
+  readFormIntoAccount();
   scheduleSave();
 });
 
@@ -1067,6 +1077,7 @@ async function startAccount(id) {
     warmup: account.warmup,
     dailyJoinLimit: account.dailyJoinLimit ?? 20,
     autoJoin: account.autoJoin !== false,
+    redBackground: account.redBackground !== false,
     autoForm: account.autoForm !== false,
     formAnswer: account.formAnswer ?? '',
     text,

@@ -760,6 +760,7 @@ ipcMain.handle('publish:start', async (_event, payload) => {
           },
           onResult: (url, outcome) => saveResult(id, url, outcome),
           text,
+          redBackground: payload.redBackground === true,
           imagePath: imagePath || null,
           prepareImageClipboard,
           withClipboardLock,
