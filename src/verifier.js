@@ -244,11 +244,13 @@ export async function verifyGroups({
   getJoinCount = () => 0,
   onJoin = async () => {},
   onOffline = () => {},
+  onSessionLost = () => {},
 }) {
   try {
     await access(cookiesPath);
   } catch {
     onLog(t(lang, 'publish.needLogin'));
+    onSessionLost();
     return;
   }
 
@@ -383,6 +385,7 @@ export async function verifyGroups({
           continue;
         }
         onLog(t(lang, 'subscribe.sessionExpired'));
+        onSessionLost();
         await onResult(url, { status: 'unknown', reason: 'session', counts: verdict.counts, at: Date.now() });
         break;
       }

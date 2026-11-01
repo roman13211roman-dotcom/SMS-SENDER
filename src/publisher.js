@@ -653,6 +653,7 @@ export async function publishToGroups({
   shouldStop = () => false,
   shouldPause = () => false,
   onOffline = () => {},
+  onSessionLost = () => {},
   prepareImageClipboard = null,
   onSuccess = () => {},
   startAt = null,
@@ -666,6 +667,7 @@ export async function publishToGroups({
     await access(cookiesPath);
   } catch {
     onLog(t(lang, 'publish.needLogin'));
+    onSessionLost();
     return;
   }
 
@@ -915,6 +917,7 @@ export async function publishToGroups({
           continue;
         }
         onLog(t(lang, 'subscribe.sessionExpired'));
+        onSessionLost();
         break;
       }
       sessionRetries = 0;

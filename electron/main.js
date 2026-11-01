@@ -26,7 +26,7 @@ import { t } from '../src/i18n.js';
 import { createTracer } from '../src/trace.js';
 import { createBlacklist, createWorklist, groupKey } from '../src/blacklist.js';
 import { verifyGroups } from '../src/verifier.js';
-import { waitUntilStart } from '../src/timing.js';
+import { waitUntilStart, waitWithStop } from '../src/timing.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // У встановленій програмі Program Files зазвичай доступний лише для читання,
@@ -781,41 +781,66 @@ ipcMain.handle('publish:start', async (_event, payload) => {
           },
         });
 
-  /** «Цикл»: 1) вступ до груп → 2) публікація → 3) фінальна верифікація постів. */
+  /**
+   * «Цикл»: 1) вступ до груп → 2) публікація → 3) фінальна верифікація постів,
+   * і так по колу БЕЗ зупинки, поки не натиснуто «Зупинити» (або втрачено сесію / блокування).
+   */
   const runFull = async () => {
-    common.onLog(t(lang, 'cycle.stage1'));
-    const okGroups = new Set();
-    const baseVerify = verifyArgs(groups, { joinOnly: true, ignoreKnown: true, autoJoin: true });
-    await verifyGroups({
-      ...baseVerify,
-      onResult: async (url, entry) => {
-        if (entry.status === 'member' || entry.reason === 'justJoined') okGroups.add(groupKey(url));
-        await baseVerify.onResult(url, entry);
-      },
-    });
-    if (rt.stop || rt.blocked) return;
-    const postable = groups.filter((u) => okGroups.has(groupKey(u)));
-    if (postable.length === 0) {
-      common.onLog(t(lang, 'cycle.noGroupsForPost'));
-      return;
+    let fatal = false; // сесію втрачено / немає входу — крутити цикл далі марно
+    const onSessionLost = () => {
+      fatal = true;
+    };
+    const finished = () => rt.stop || rt.blocked || fatal;
+    const CYCLE_PAUSE_MS = 60 * 1000;
+    const EMPTY_PAUSE_MS = 10 * 60 * 1000;
+    let cycle = 0;
+
+    while (!finished()) {
+      cycle++;
+      if (cycle > 1) common.onLog(t(lang, 'cycle.next', { n: cycle }));
+      common.onLog(t(lang, 'cycle.stage1'));
+      const okGroups = new Set();
+      const baseVerify = verifyArgs(groups, { joinOnly: true, ignoreKnown: true, autoJoin: true, onSessionLost });
+      await verifyGroups({
+        ...baseVerify,
+        onResult: async (url, entry) => {
+          if (entry.status === 'member' || entry.reason === 'justJoined') okGroups.add(groupKey(url));
+          await baseVerify.onResult(url, entry);
+        },
+      });
+      if (finished()) break;
+
+      const postable = groups.filter((u) => okGroups.has(groupKey(u)));
+      if (postable.length === 0) {
+        common.onLog(t(lang, 'cycle.noGroupsForPost'));
+        await waitWithStop(EMPTY_PAUSE_MS, common.shouldPause, common.shouldStop);
+        continue;
+      }
+
+      common.onLog(t(lang, 'cycle.stage2', { total: postable.length }));
+      await publishToGroups(publishArgs(postable, { autoJoin: false, onSessionLost }));
+      if (finished()) break;
+
+      common.onLog(t(lang, 'cycle.stage3', { total: postable.length }));
+      // Етап 3 виправляє помилки лічильників: підсумок верифікації перезаписує результати публікації.
+      const v3 = verifyArgs(postable, { ignoreKnown: true, autoJoin: false, onSessionLost });
+      await verifyGroups({
+        ...v3,
+        onResult: async (url, entry) => {
+          await v3.onResult(url, entry);
+          let out = null;
+          if (entry.status === 'good') out = { status: 'published', reason: '' };
+          else if (entry.status === 'pending' || entry.reason === 'pendingMany') out = { status: 'pending', reason: 'posted' };
+          else if (entry.status === 'rejected') out = { status: 'failed', reason: entry.reason === 'neverPosted' ? 'notConfirmed' : entry.reason };
+          if (out) await saveResult(id, url, out);
+        },
+      });
+      if (finished()) break;
+
+      common.onLog(t(lang, 'cycle.finished', { n: cycle, seconds: Math.round(CYCLE_PAUSE_MS / 1000) }));
+      await waitWithStop(CYCLE_PAUSE_MS, common.shouldPause, common.shouldStop);
     }
-    common.onLog(t(lang, 'cycle.stage2', { total: postable.length }));
-    await publishToGroups(publishArgs(postable, { autoJoin: false }));
-    if (rt.stop || rt.blocked) return;
-    common.onLog(t(lang, 'cycle.stage3', { total: postable.length }));
-    // Етап 3 виправляє помилки лічильників: підсумок верифікації перезаписує результати публікації.
-    const v3 = verifyArgs(postable, { ignoreKnown: true, autoJoin: false });
-    await verifyGroups({
-      ...v3,
-      onResult: async (url, entry) => {
-        await v3.onResult(url, entry);
-        let out = null;
-        if (entry.status === 'good') out = { status: 'published', reason: '' };
-        else if (entry.status === 'pending' || entry.reason === 'pendingMany') out = { status: 'pending', reason: 'posted' };
-        else if (entry.status === 'rejected') out = { status: 'failed', reason: entry.reason === 'neverPosted' ? 'notConfirmed' : entry.reason };
-        if (out) await saveResult(id, url, out);
-      },
-    });
+    if (rt.stop) common.onLog(t(lang, 'publish.stoppedByUser'));
   };
 
   // Запускаємо у фоні, щоб не блокувати IPC-відповідь

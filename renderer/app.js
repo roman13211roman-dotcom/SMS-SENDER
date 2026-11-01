@@ -456,7 +456,11 @@ function renderVerify() {
     if (!key || seen.has(key)) continue;
     seen.add(key);
     const black = blacklistItems.find((b) => b.key === key);
-    const entry = black ? { status: 'blacklisted', reason: black.reason, at: black.at } : data[key];
+    let entry = black ? { status: 'blacklisted', reason: black.reason, at: black.at } : data[key];
+    // Старий збережений вердикт «чорний список» без запису в актуальному списку (його обнулили) → не чорний.
+    if (entry && !black && entry.status === 'blacklisted') {
+      entry = { ...entry, status: entry.reason === 'pendingMany' ? 'pending' : 'rejected' };
+    }
     const status = entry?.status ?? 'none';
     const tr = document.createElement('tr');
     const groupCell = document.createElement('td');
@@ -665,7 +669,7 @@ function updateControls() {
   btnUseWorkEl.classList.toggle('mode-btn-active', Boolean(account.useWorklist));
   btnUseWorkEl.disabled = busy;
   el('workHint').textContent = account.useWorklist ? ui.workActive(effectiveGroups(account).length) : ui.workHint;
-  groupsListEl.disabled = publishLike && Boolean(account.useWorklist);
+  groupsListEl.disabled = accountMode === 'publish' && Boolean(account.useWorklist);
   verifyResultsEl.hidden = !(verifyLike || accountMode === 'full');
   delayRowEl.hidden = accountMode === 'activity' || accountMode === 'warmup' || verifyLike;
   btnImportGroupsEl.disabled = busy;
@@ -865,10 +869,22 @@ function setAccountMode(mode) {
   if (!account || isBusy(account.id) || account.mode === mode) return;
   readFormIntoAccount(); // зберігаємо затримку поточного режиму
   account.mode = mode;
+  if (mode === 'full') account.useWorklist = false; // у циклі за замовчуванням — власний список (його можна редагувати)
   loadFormFromAccount(); // показуємо затримку нового режиму
   applyTranslations();
   scheduleSave();
 }
+
+// У циклі редагування власного списку автоматично вимикає «Групи в роботу».
+groupsListEl.addEventListener('input', () => {
+  const account = activeAccount();
+  if (account && account.mode === 'full' && account.useWorklist) {
+    account.useWorklist = false;
+    readFormIntoAccount();
+    updateControls();
+    scheduleSave();
+  }
+});
 
 modePublishEl.addEventListener('click', () => setAccountMode('publish'));
 modeActivityEl.addEventListener('click', () => setAccountMode('activity'));
@@ -905,7 +921,7 @@ btnDropBlackEl.addEventListener('click', () => {
 
 btnResetBlackEl.addEventListener('click', async () => {
   const account = activeAccount();
-  if (!account || isBusy(account.id)) return;
+  if (!account) return;
   if (!window.confirm(getUiText(currentLang).confirmResetBlack(blacklistItems.length))) return;
   await window.api.resetBlacklist(account.id);
   await refreshBlacklist();
