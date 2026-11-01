@@ -17,7 +17,7 @@ import { t } from './i18n.js';
 import { sleep, waitWithStop, waitWhilePaused } from './timing.js';
 import { launchChrome } from './chromeLauncher.js';
 import { assertNotBlocked, BlockedError, detectBlock } from './blockDetect.js';
-import { looksLikeLoginPage, detectGroupState, isLoggedOutPage, joinGroupFlow } from './groupJoin.js';
+import { looksLikeLoginPage, detectGroupState, isLoggedOutPage, joinGroupFlow, confirmSessionLost } from './groupJoin.js';
 import { groupBaseUrl, groupKey } from './blacklist.js';
 import { noopTracer } from './trace.js';
 import { access } from 'node:fs/promises';
@@ -281,6 +281,7 @@ export async function verifyGroups({
     });
     const page = await context.newPage();
     let sinceBreak = 0;
+    let sessionRetries = 0;
 
     for (let i = 0; i < list.length; i++) {
       if (shouldStop()) {
@@ -346,11 +347,21 @@ export async function verifyGroups({
         break;
       }
       if (verdict.reason === 'session') {
-        onLog(t(lang, 'subscribe.sessionExpired'));
+        onLog(t(lang, 'session.recheck', { current }));
+        const check = await confirmSessionLost(page, { shouldStop });
+        if (check === 'ok' && sessionRetries < 3) {
+          sessionRetries++;
+          trace.event('session.falseAlarm', { n: current, url, retry: sessionRetries });
+          i--; // повторюємо цю саму групу
+          continue;
+        }
+        if (check === 'offline') onLog(t(lang, 'session.offline'));
+        else onLog(t(lang, 'subscribe.sessionExpired'));
         await onResult(url, { status: 'unknown', reason: 'session', counts: verdict.counts, at: Date.now() });
         break;
       }
 
+      sessionRetries = 0;
       const entry = { status: verdict.status, reason: verdict.reason, counts: verdict.counts, at: Date.now() };
       if (verdict.status === 'blacklisted') {
         await blacklist.add(url, { reason: verdict.reason, account: accountId, counts: verdict.counts });

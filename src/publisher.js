@@ -28,6 +28,7 @@
 import { access } from 'node:fs/promises';
 import { groupKey } from './blacklist.js';
 import { countItems } from './verifier.js';
+import { confirmSessionLost } from './groupJoin.js';
 import { t } from './i18n.js';
 import { todayKey } from './warmup.js';
 import { noopTracer } from './trace.js';
@@ -640,6 +641,7 @@ export async function publishToGroups({
 
     const counts = { published: 0, pending: 0, joinPending: 0, failed: 0 };
 
+    let sessionRetries = 0;
     for (let i = 0; i < groups.length; i++) {
       if (shouldStop()) {
         onLog(t(lang, 'publish.stoppedByUser'));
@@ -806,9 +808,20 @@ export async function publishToGroups({
       onProgress(current, groups.length);
       if (blocked) break;
       if (sessionExpired) {
-        onLog(t(lang, 'subscribe.sessionExpired'));
+        onLog(t(lang, 'session.recheck', { current }));
+        const chk = await context.newPage();
+        const check = await confirmSessionLost(chk, { shouldStop }).finally(() => chk.close().catch(() => {}));
+        if (check === 'ok' && sessionRetries < 3) {
+          sessionRetries++;
+          trace.event('session.falseAlarm', { n: current, url, retry: sessionRetries });
+          counts[outcome.status] = Math.max(0, (counts[outcome.status] ?? 1) - 1);
+          i--; // повторюємо цю саму групу
+          continue;
+        }
+        onLog(t(lang, check === 'offline' ? 'session.offline' : 'subscribe.sessionExpired'));
         break;
       }
+      sessionRetries = 0;
 
       if (i < groups.length - 1 && !shouldStop() && acted) {
         const wait = randomDelayMs(delayMinSec, delayMaxSec);

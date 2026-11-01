@@ -433,3 +433,26 @@ export async function joinGroupFlow(page, { autoForm, formAnswer, onLog, lang, c
   onLog(t(lang, 'subscribe.unverified', { current }));
   return { result: 'failed', reason: 'joinUnconfirmed' };
 }
+
+
+/**
+ * Перед зупинкою через «сесія недійсна» перевіряємо ще раз: після сну комп'ютера,
+ * обриву інтернету чи збою завантаження сторінка може виглядати як вихід із акаунта.
+ * Відкриваємо головну Facebook із паузами 8 / 30 / 90 с.
+ * @returns {Promise<'lost'|'ok'|'offline'>} lost — справді розлогінено; ok — сесія жива; offline — Facebook недоступний.
+ */
+export async function confirmSessionLost(page, { shouldStop = () => false } = {}) {
+  for (const waitMs of [8000, 30000, 90000]) {
+    await new Promise((r) => setTimeout(r, waitMs));
+    if (shouldStop()) return 'lost';
+    const loaded = await page
+      .goto('https://www.facebook.com/', { waitUntil: 'domcontentloaded', timeout: 45000 })
+      .then(() => true)
+      .catch(() => false);
+    if (!loaded) continue;
+    await new Promise((r) => setTimeout(r, 2500));
+    if (looksLikeLoginPage(page.url()) || (await isLoggedOutPage(page).catch(() => false))) return 'lost';
+    return 'ok';
+  }
+  return 'offline';
+}
